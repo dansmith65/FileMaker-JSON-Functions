@@ -1,0 +1,37 @@
+/**
+ * =====================================
+ * jsonAv ( value )
+ *
+ * PURPOSE:
+ *		Prepares a string for inclusion as an element in a JSON array.
+ *
+ * PARAMETERS:
+ *		value = any value to be encoded
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+If (
+	/* return the value as-is if it's a json array or object */
+	/**
+	 * TODO: this would incorrectly detect json on a value like:
+	 *	{this is a note in curly-brances}
+	 */
+	Let ( [
+		~firstAndLast = Left ( value ; 1 ) & Right ( value ; 1 )
+	] ;
+		~firstAndLast = "[]"		/* array */
+		or ~firstAndLast = "{}"		/* object */
+	) ;
+	value ;
+
+	~jsonEncodeValue ( value )
+)
+
+& ","

@@ -1,0 +1,32 @@
+/**
+ * =====================================
+ * ~jsonEncodeNumber ( value )
+ *
+ * RETURNS:
+ *		JSON encoded number.
+ *
+ * PARAMETERS:
+ *		value = a valid number
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * TODO:
+ *		decimal is region-specific, should be updated to work with number formats
+ *		that use commas for the fractional component
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	Left ( value ; 2 ) = "-." ;
+	Substitute ( value ; "-." ; "-0." ) ;
+
+	Left ( value ; 1 ) = "." ;
+	"0" & value ;
+
+	value
+)

@@ -3,7 +3,7 @@
  * ~jsonEncodeString ( string )
  *
  * RETURNS:
- *		JSON string
+ *		JSON encoded string.
  *
  * PARAMETERS:
  *		string = any value to be escaped as a string

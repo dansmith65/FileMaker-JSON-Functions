@@ -1,0 +1,19 @@
+/**
+ * =====================================
+ * json ( value )
+ *
+ * RETURNS:
+ *		JSON encoded number.
+ *
+ * PARAMETERS:
+ *		value = a valid number
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
