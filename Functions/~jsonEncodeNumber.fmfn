@@ -11,7 +11,7 @@
  * DEPENDENCIES:
  *		none
  *
- * TODO:
+ * TODO: future version
  *		decimal is region-specific, should be updated to work with number formats
  *		that use commas for the fractional component
  *

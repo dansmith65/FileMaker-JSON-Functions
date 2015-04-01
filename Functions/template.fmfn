@@ -1,15 +1,18 @@
 /**
  * =====================================
- * json ( value )
+ * ~json ( key )
+ *
+ * PURPOSE:
+ *		
  *
  * RETURNS:
- *		JSON encoded number.
+ *		Empty string.
  *
  * PARAMETERS:
- *		value = a valid number
+ *		key = object property/name
  *
  * DEPENDENCIES:
- *		none
+ *		
  *
  * HISTORY:
  *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
@@ -17,3 +20,49 @@
  * =====================================
  */
 
+Case (
+	/* Step 0, set-up */
+	not $#Filter.step ;
+	Let ( [
+		~result = "TODO: do setup here" ;
+		
+		$#Filter.result = ~result ;
+		$#Filter.step = If (
+			Not IsEmpty ( ~result )
+				or Not IsEmpty ( $~json.error )
+			;
+			2 ;
+			1
+		)
+	] ;
+		#Filter ( parameters ; filterParameters )
+	) ;
+
+	/* Step 1, main */
+	$#Filter.step = 1 ;
+	Let ( [
+		~result = "TODO: do stuff here" ;
+		
+		$#Filter.result = ~result ;
+		$#Filter.step = If (
+			Not IsEmpty ( ~result )
+				or Not IsEmpty ( $~json.error )
+			;
+			2 ;
+			1
+		)
+	] ;
+		#Filter ( parameters ; filterParameters )
+	) ;
+
+	/* Step 2, clean-up and return result */
+	$#Filter.step = 2 ;
+	Let ( [
+		~result = $#Filter.result ;
+		// purge variables
+		$#Filter.step = ""
+		$#Filter.result = ""
+	] ;
+		~result
+	)
+)
