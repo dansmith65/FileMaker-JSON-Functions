@@ -21,6 +21,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseObjectFindValue start [step:" & $~jsonParseObjectFindValue.step & "]"
+) & /* logging end */
+
 Case (
 	/* Step 0, set-up */
 	not $~jsonParseObjectFindValue.step ;

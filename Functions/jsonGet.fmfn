@@ -23,6 +23,6 @@
  */
 
 If ( ~jsonFindValue ( json ; keyOrIndex ) ;
-	~jsonParseString ;
+	~jsonParseValue ;
 	"json:notFound"
 )

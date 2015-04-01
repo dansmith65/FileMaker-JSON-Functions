@@ -18,13 +18,17 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseError [message:" & message & "]"
+) & /* logging end */
+
 Let ( [
 	/* save the error */
 	$~json.error = List (
 		message
 			& If ( $~json.at > 0 ;
-				" [position:" & $~json.at & "]"
-				& " [character:" & $~json.ch & "]"
+				" [ch:" & $~json.ch & "]"
+				& " [at:" & $~json.at & "]"
 			)
 		;
 		$~json.error

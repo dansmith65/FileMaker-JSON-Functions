@@ -24,6 +24,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseString start [step:" & $~jsonParseString.step & "]"
+) & /* logging end */
+
 Case (
 	/* Step 0, set-up */
 	not $~jsonParseString.step ;

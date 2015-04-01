@@ -30,6 +30,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonFindValue start"
+) & /* logging end */
+
 Let ( [
 	/* initialize parsing variables */
 	$~json.ch = " " ;

@@ -20,6 +20,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseWhitespace start"
+) & /* logging end */
+
 If ( Not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
 	~jsonDiscardResult ( ~jsonParseNext ( "" ) )
 		& ~jsonParseWhitespace

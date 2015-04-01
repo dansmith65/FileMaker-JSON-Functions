@@ -20,6 +20,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseValue start"
+) & /* logging end */
+
 ~jsonParseWhitespace
 & Case (
 	$~json.ch = "{" ;

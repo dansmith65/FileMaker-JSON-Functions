@@ -20,6 +20,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseWord start"
+) & /* logging end */
+
 Case (
 	$~json.ch = "t" ;
 	If ( Not IsEmpty ( ~jsonParseNext ( "t" ) )

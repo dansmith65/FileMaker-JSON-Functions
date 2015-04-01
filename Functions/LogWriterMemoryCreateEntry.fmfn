@@ -1,0 +1,40 @@
+/**
+ * =====================================
+ * LogWriterMemoryCreateEntry ( logData )
+ *
+ * PURPOSE:
+ *		Save logData in a global variable; allow for saving multiple log entries in order.
+ *
+ * RETURNS:
+ *		Empty string.
+ *
+ * PARAMETERS:
+ *		logData = data to log, in whichever format you choose
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * NOTES:
+ *		Saves data in a format compatible with the "Log Writer: Memory" module.
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-01 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Let ( [
+	logData = logData
+		& " [ch:" & $~json.ch & "]"
+		& " [at:" & $~json.at & "]"
+	;
+	$$LOGWRITER.MEMORY.LAST = $$LOGWRITER.MEMORY.LAST + 1 ;
+	$$LOGWRITER.MEMORY[$$LOGWRITER.MEMORY.LAST] = logData
+] ;
+	If ( $$LOGWRITER.MEMORY.FIRST < 1 ;
+		Let (
+			$$LOGWRITER.MEMORY.FIRST = $$LOGWRITER.MEMORY.LAST ;
+			""
+		)
+	)
+)

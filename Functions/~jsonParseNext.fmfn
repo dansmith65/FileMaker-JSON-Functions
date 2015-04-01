@@ -20,6 +20,10 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseNext start [character:" & character & "]"
+) & /* logging end */
+
 If ( Not IsEmpty ( character )
 	and character ≠ $~json.ch ;
 	~jsonDiscardResult ( ~jsonParseError (
