@@ -87,6 +87,7 @@ Case (
 			& ~jsonParseWhitespace
 		) ;
 		
+		$~jsonParseObjectFindValue.i = $~jsonParseObjectFindValue.i + 1 ;
 		$~jsonParseObjectFindValue.result = ~result ;
 		$~jsonParseObjectFindValue.step = If (
 			Not IsEmpty ( $~jsonParseObjectFindValue.result ) ;
@@ -101,8 +102,13 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseObjectFindValue.step = 2 ;
 	Let ( [
+		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseObjectFindValue end [i:" & $~jsonParseObjectFindValue.i & "]"
+		) & /* logging end */ "" ;
+
 		~result = $~jsonParseObjectFindValue.result ;
 		// purge variables
+		$~jsonParseObjectFindValue.i = "" ;
 		$~jsonParseObjectFindValue.step = "" ;
 		$~jsonParseObjectFindValue.result = ""
 	] ;

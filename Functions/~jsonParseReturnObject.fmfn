@@ -30,10 +30,15 @@
  * =====================================
  */
 
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseReturnObject start [step:" & $~jsonParseReturnObject.step & "]"
+) & /* logging end */
+
 Case (
 	/* Step 0, set-up */
 	not $~jsonParseReturnObject.step ;
 	Let ( [
+		$~jsonParseReturnObject.startAt = $~json.at  - 1 ;
 		~result = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
 			~jsonParseError ( "Pointer was not pointed at start of an object" )
 		) & ~jsonParseWhitespace ;
@@ -77,6 +82,7 @@ Case (
 			& ~jsonParseWhitespace
 		) ;
 		
+		$~jsonParseReturnObject.i = $~jsonParseReturnObject.i + 1 ;
 		$~jsonParseReturnObject.step = If (
 			Not IsEmpty ( $~json.error )
 				or $~jsonParseReturnObject.endAt
@@ -92,6 +98,12 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseReturnObject.step = 2 ;
 	Let ( [
+		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseReturnObject end [i:" & $~jsonParseReturnObject.i & "]"
+				& " [startAt:" & $~jsonParseReturnObject.startAt & "]"
+				& " [endAt:" & $~jsonParseReturnObject.endAt & "]"
+		) & /* logging end */ "" ;
+
 		~result = Case (
 			$~jsonParseReturnObject.result ;
 			$~jsonParseReturnObject.result ;
@@ -103,10 +115,11 @@ Case (
 			Middle (
 				$~json.text ;
 				$~jsonParseReturnObject.startAt ;
-				$~jsonParseReturnObject.endAt - $~jsonParseReturnObject.startAt + 1
+				$~jsonParseReturnObject.endAt - $~jsonParseReturnObject.startAt
 			)
 		) ;
 		// purge variables
+		$~jsonParseReturnObject.i = "" ;
 		$~jsonParseReturnObject.step = "" ;
 		$~jsonParseReturnObject.result = "" ;
 		$~jsonParseReturnObject.startAt = "" ;

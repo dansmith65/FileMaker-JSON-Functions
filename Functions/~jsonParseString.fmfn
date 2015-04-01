@@ -74,6 +74,7 @@ Case (
 			)
 		;
 		
+		$~jsonParseString.i = $~jsonParseString.i + 1 ;
 		$~jsonParseString.step = If (
 			Not IsEmpty ( $~json.error )		/* an error occurred */
 				or IsEmpty ( $~json.ch )		/* no more data left */
@@ -90,8 +91,13 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseString.step = 2 ;
 	Let ( [
+		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseString end [i:" & $~jsonParseString.i & "]"
+		) & /* logging end */ "" ;
+
 		~result = $~jsonParseString.result ;
 		// purge variables
+		$~jsonParseString.i = "" ;
 		$~jsonParseString.step = "" ;
 		$~jsonParseString.result = ""
 	] ;
