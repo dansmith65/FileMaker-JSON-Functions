@@ -20,7 +20,7 @@
  * =====================================
  */
 
-If ( IsEmpty ( $~json.ch ) or $~json.ch > " " ;
+If ( Not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
 	~jsonDiscardResult ( ~jsonParseNext ( "" ) )
 		& ~jsonParseWhitespace
 )

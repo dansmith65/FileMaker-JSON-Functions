@@ -23,8 +23,8 @@ Let ( [
 	$~json.error = List (
 		message
 			& If ( $~json.at > 0 ;
-				" [position: " & $~json.at & "]"
-				& " [character: " & $~json.ch & "]"
+				" [position:" & $~json.at & "]"
+				& " [character:" & $~json.ch & "]"
 			)
 		;
 		$~json.error

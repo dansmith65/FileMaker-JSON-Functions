@@ -28,16 +28,8 @@ Case (
 	/* Step 0, set-up */
 	not $~jsonParseString.step ;
 	Let ( [
-		$~jsonParseString.result = If (
-			$~json.ch ≠ "\"" ;
-			~jsonParseError ( "Bad string" )
-		) ;
-		
-		$~jsonParseString.step = If (
-			Not IsEmpty ( $~jsonParseString.result ) ;
-			2 ;
-			1
-		)
+		/* currently no setup to do, I'm leaving this structure in case I need it later */
+		$~jsonParseString.step = 1
 	] ;
 		~jsonParseString
 	) ;
@@ -47,29 +39,40 @@ Case (
 	$~jsonParseString.step = 1 ;
 	Let ( [
 		~ch = ~jsonParseNext ( "" ) ;
-		~ch2 = ~jsonParseNext ( "" ) ;
 		$~jsonParseString.result =
-			If ( ~ch ≠ "\\" ;
-				$~jsonParseString.result & ~ch ;
-				/* else: character is escaped */
-				Case (
-					~ch2 = "u" ;		$~jsonParseString.result & ~jsonParseHex ;
-					~ch2 = "\"" ;		$~jsonParseString.result & "\"" ;
-					~ch2 = "\\" ;		$~jsonParseString.result & "\\" ;
-					~ch2 = "/" ;		$~jsonParseString.result & "/" ;
-					~ch2 = "b" ;		$~jsonParseString.result & Char ( 8 ) ;
-					~ch2 = "f" ;		$~jsonParseString.result & Char ( 12 ) ;
-					~ch2 = "n" ;		$~jsonParseString.result & Char ( 10 ) ;
-					~ch2 = "r" ;		$~jsonParseString.result & Char ( 13 ) ;
-					~ch2 = "t" ;		$~jsonParseString.result & Char ( 9 ) ;
-					/* else */
-					~jsonParseError ( "Bad string: invalid value after backslash escape" )
-				)
+			Case (
+				/* end of string */
+				~ch = "\"" ;
+				$~jsonParseString.result
+					& ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+				;
+				
+				/* character is escaped */
+				~ch = "\\" ;
+				~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+					& Case (
+						$~json.ch = "u" ;		$~jsonParseString.result & ~jsonParseHex ;
+						$~json.ch = "\"" ;		$~jsonParseString.result & "\"" ;
+						$~json.ch = "\\" ;		$~jsonParseString.result & "\\" ;
+						$~json.ch = "/" ;		$~jsonParseString.result & "/" ;
+						$~json.ch = "b" ;		$~jsonParseString.result & Char ( 8 ) ;
+						$~json.ch = "f" ;		$~jsonParseString.result & Char ( 12 ) ;
+						$~json.ch = "n" ;		$~jsonParseString.result & Char ( 10 ) ;
+						$~json.ch = "r" ;		$~jsonParseString.result & Char ( 13 ) ;
+						$~json.ch = "t" ;		$~jsonParseString.result & Char ( 9 ) ;
+						/* else */
+						~jsonParseError ( "Bad string: invalid value after backslash escape" )
+					)
+				;
+				
+				/* else */
+				$~jsonParseString.result & ~ch
 			)
 		;
+		
 		$~jsonParseString.step = If (
 			Not IsEmpty ( $~json.error )		/* an error occurred */
-				or IsEmpty ( ~ch )			/* no more data left */
+				or IsEmpty ( $~json.ch )		/* no more data left */
 				or ~ch = "\""				/* end of string */
 			;
 			2 ;
