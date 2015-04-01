@@ -1,0 +1,101 @@
+/**
+ * =====================================
+ * ~jsonParseArrayFindValue ( index )
+ *
+ * PURPOSE:
+ *		Move pointer to the start of the value for a specified index.
+ *
+ * RETURNS:
+ *		Boolean True if value is found, False if it isn't
+ *		"json:error" if an error occurred
+ *
+ * PARAMETERS:
+ *		index = array index/location (0-based)
+ *
+ * DEPENDENCIES:
+ *		The pointer is expected to be on the "[" in the array.
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	/* Step 0, set-up */
+	not $~jsonParseArrayFindValue.step ;
+	Let ( [
+		$~jsonParseArrayFindValue.i = -1 ;
+		~result = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
+			"json:error"
+		) & ~jsonParseWhitespace ;
+		
+		/* check if array is empty */
+		~result = Case (
+			Not IsEmpty ( ~result ) ;
+			~result ;
+			
+			$~json.ch = "]" ;
+			False & ~jsonDiscardResult ( ~jsonParseNext ( "]" ) ) 
+		) ;
+		
+		$~jsonParseArrayFindValue.result = ~result ;
+		$~jsonParseArrayFindValue.step = If (
+			Not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseArrayFindValue ( index )
+	) ;
+
+	
+	/* Step 1, main */
+	$~jsonParseArrayFindValue.step = 1 ;
+	Let ( [
+		$~jsonParseArrayFindValue.i = $~jsonParseArrayFindValue.i + 1 ;
+		~result = If (
+			$~jsonParseArrayFindValue.i = index ;
+			/* found the value it was looking for! */
+			True ;
+			~jsonParseWhitespace
+		) ;
+		
+		/* check if at end of object */
+		~result = Case (
+			Not IsEmpty ( ~result ) ;
+			~result ;
+			
+			$~json.ch = "]" ;
+			False & ~jsonDiscardResult ( ~jsonParseNext ( "]" ) ) 
+		) ;
+
+		/* if there was no error, and index did not match, and not at end of object, advance pointer to next index */
+		~! = If ( IsEmpty ( $~json.error ) and IsEmpty ( ~result ) ;
+			~jsonParseNext ( "," )
+			& ~jsonParseWhitespace
+		) ;
+		
+		$~jsonParseArrayFindValue.result = ~result ;
+		$~jsonParseArrayFindValue.step = If (
+			Not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseArrayFindValue ( index )
+	) ;
+
+	
+	/* Step 2, clean-up and return result */
+	$~jsonParseArrayFindValue.step = 2 ;
+	Let ( [
+		~result = $~jsonParseArrayFindValue.result ;
+		// purge variables
+		$~jsonParseArrayFindValue.step = "" ;
+		$~jsonParseArrayFindValue.result = "" ;
+		$~jsonParseArrayFindValue.i = ""
+	] ;
+		~result
+	)
+)

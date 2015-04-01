@@ -1,0 +1,93 @@
+/**
+ * =====================================
+ * ~jsonParseString
+ *
+ * RETURNS:
+ *		FileMaker text (the original value before it was encoded as json).
+ *
+ * PARAMETERS:
+ *		
+ *
+ * DEPENDENCIES:
+ *		Pointer is expected to be at " starting the string.
+ *		Custom Functions:
+ *			~jsonParseString	(self: it's recursive!)
+ *			~jsonParseError
+ *			~jsonParseNext
+ *			~jsonParseHex
+ *			
+ *			
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	/* Step 0, set-up */
+	not $~jsonParseString.step ;
+	Let ( [
+		$~jsonParseString.result = If (
+			$~json.ch ≠ "\"" ;
+			~jsonParseError ( "Bad string" )
+		) ;
+		
+		$~jsonParseString.step = If (
+			Not IsEmpty ( $~jsonParseString.result ) ;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseString
+	) ;
+	
+	
+	/* Step 1, main */
+	$~jsonParseString.step = 1 ;
+	Let ( [
+		~ch = ~jsonParseNext ( "" ) ;
+		~ch2 = ~jsonParseNext ( "" ) ;
+		$~jsonParseString.result =
+			If ( ~ch ≠ "\\" ;
+				$~jsonParseString.result & ~ch ;
+				/* else: character is escaped */
+				Case (
+					~ch2 = "u" ;		$~jsonParseString.result & ~jsonParseHex ;
+					~ch2 = "\"" ;		$~jsonParseString.result & "\"" ;
+					~ch2 = "\\" ;		$~jsonParseString.result & "\\" ;
+					~ch2 = "/" ;		$~jsonParseString.result & "/" ;
+					~ch2 = "b" ;		$~jsonParseString.result & Char ( 8 ) ;
+					~ch2 = "f" ;		$~jsonParseString.result & Char ( 12 ) ;
+					~ch2 = "n" ;		$~jsonParseString.result & Char ( 10 ) ;
+					~ch2 = "r" ;		$~jsonParseString.result & Char ( 13 ) ;
+					~ch2 = "t" ;		$~jsonParseString.result & Char ( 9 ) ;
+					/* else */
+					~jsonParseError ( "Bad string: invalid value after backslash escape" )
+				)
+			)
+		;
+		$~jsonParseString.step = If (
+			Not IsEmpty ( $~json.error )		/* an error occurred */
+				or IsEmpty ( ~ch )			/* no more data left */
+				or ~ch = "\""				/* end of string */
+			;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseString
+	) ;
+
+	
+	/* Step 2, clean-up and return result */
+	$~jsonParseString.step = 2 ;
+	Let ( [
+		~result = $~jsonParseString.result ;
+		// purge variables
+		$~jsonParseString.step = "" ;
+		$~jsonParseString.result = ""
+	] ;
+		~result
+	)
+)

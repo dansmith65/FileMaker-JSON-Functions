@@ -1,0 +1,56 @@
+/**
+ * =====================================
+ * ~jsonFindValue ( json ; keyOrIndex )
+ *
+ * PURPOSE:
+ *		Find the starting position of a value.
+ *
+ * RETURNS:
+ *		Boolean True if value is found, False if it isn't
+ *		"json:error" if an error occurred
+ *
+ * PARAMETERS:
+ *		value = a valid number
+ *
+ * DEPENDENCIES:
+ *		~jsonDiscardResult
+ *		~jsonParseError
+ *		~jsonParseWhitespace
+ *		~jsonParseObjectFindValue
+ *		~jsonParseArrayFindValue
+ *
+ * NOTES:
+ *		used by jsonGet to return the value
+ *		used by jsonModify to replace the value
+ *		consider calling this something like "indexOf"
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Let ( [
+	/* initialize parsing variables */
+	$~json.ch = " " ;
+	$~json.at = 1 ;
+	$~json.text = json ;
+	$~json.error = ""
+] ;
+	~jsonParseWhitespace
+	& Case (
+		/* object */
+		$~json.ch = "{" ;
+		~jsonParseObjectFindValue ( keyOrIndex ) ;
+		
+		/* array */
+		$~json.ch = "[" ;
+		~jsonParseArrayFindValue ( keyOrIndex ) ;
+		
+		/* else: string, number, or word */
+		~jsonDiscardResult ( ~jsonParseError (
+			"value sent to ~jsonFindValue function was a string, number, or word. An object or array was expected."
+		) )
+		& "json:error"
+	)
+)

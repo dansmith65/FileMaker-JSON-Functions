@@ -1,0 +1,54 @@
+/**
+ * =====================================
+ * ~jsonParseWord
+ *
+ * RETURNS:
+ *		1 for true, 0 for false, "json:null" for null
+ *		"json:error" if an error occurred
+ *
+ * PARAMETERS:
+ *		
+ *
+ * DEPENDENCIES:
+ *		Pointer is expected to be at start of 
+ *		Custom Functions:
+ *			~jsonParseNext
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	$~json.ch = "t" ;
+	If ( Not IsEmpty ( ~jsonParseNext ( "t" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "r" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "u" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "e" ) )
+		;
+		True ;
+		"json:error"
+	) ;
+	
+	$~json.ch = "f" ;
+	If ( Not IsEmpty ( ~jsonParseNext ( "f" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "a" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "l" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "s" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "e" ) )
+		;
+		False ;
+		"json:error"
+	) ;
+	
+	$~json.ch = "n" ;
+	If ( Not IsEmpty ( ~jsonParseNext ( "n" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "u" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "l" ) )
+		and Not IsEmpty ( ~jsonParseNext ( "l" ) )
+		;
+		"json:null" ;
+		"json:error"
+	)
+)

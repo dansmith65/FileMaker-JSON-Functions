@@ -1,0 +1,35 @@
+/**
+ * =====================================
+ * ~jsonParseNext ( character )
+ * 
+ * RETURNS:
+ *		The next character.
+ *		When there are no more characters or an error occurred, return an empty string.
+ *
+ * PARAMETERS:
+ *		character = (optional) character to expect
+ *
+ * DEPENDENCIES:
+ *		Custom Functions:
+ *			~jsonDiscardResult
+ *			~jsonParseError
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+If ( Not IsEmpty ( character )
+	and character ≠ $~json.ch ;
+	~jsonDiscardResult ( ~jsonParseError (
+		"Expected: " & Quote ( character ) & " instead of " & Quote ( $~json.ch )
+	) ) ;
+	
+	Let ( [
+		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+		$~json.at = $~json.at + 1
+	] ;
+		$~json.ch
+	)
+)

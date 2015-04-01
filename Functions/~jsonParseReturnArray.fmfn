@@ -1,0 +1,107 @@
+/**
+ * =====================================
+ * ~jsonParseReturnArray
+ *
+ * PURPOSE:
+ *		Extract all text between the current pointer and end of the array.
+ *
+ * RETURNS:
+ *		json array as text
+ *
+ * PARAMETERS:
+ *		
+ *
+ * DEPENDENCIES:
+ *		Pointer is expected to be at [ starting the array.
+ *		Custom Functions:
+ *			~jsonParseReturnArray	(self: it's recursive!)
+ *			~jsonParseError
+ *			~jsonParseNext
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	/* Step 0, set-up */
+	not $~jsonParseReturnArray.step ;
+	Let ( [
+		~result = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
+			~jsonParseError ( "Pointer was not pointed at start of an array" )
+		) & ~jsonParseWhitespace ;
+		
+		/* check if array is empty */
+		$~jsonParseReturnArray.endAt = If ( $~json.ch = "]" ;
+			$~json.at & ~jsonDiscardResult ( ~jsonParseNext ( "]" ) ) 
+		) ;
+		
+		$~jsonParseReturnArray.result = ~result ;
+		$~jsonParseReturnArray.step = If (
+			Not IsEmpty ( $~jsonParseReturnArray.result )
+				or $~jsonParseReturnArray.endAt
+			;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseReturnArray
+	) ;
+
+	
+	/* Step 1, main */
+	$~jsonParseReturnArray.step = 1 ;
+	Let ( [
+		~! = ~jsonParseValueSkip
+			& ~jsonParseWhitespace
+		;
+		
+		/* check if at end of array */
+		$~jsonParseReturnArray.endAt = If ( $~json.ch = "]" ;
+			$~json.at & ~jsonDiscardResult ( ~jsonParseNext ( "]" ) ) 
+		) ;
+		
+		~! = If ( IsEmpty ( $~json.error ) and Not $~jsonParseReturnArray.endAt ;
+			~jsonParseNext ( "," )
+			& ~jsonParseWhitespace
+		) ;
+		
+		$~jsonParseReturnArray.step = If (
+			Not IsEmpty ( $~json.error )
+				or $~jsonParseReturnArray.endAt
+			;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseReturnArray
+	) ;
+
+	
+	/* Step 2, clean-up and return result */
+	$~jsonParseReturnArray.step = 2 ;
+	Let ( [
+		~result = Case (
+			$~jsonParseReturnArray.result ;
+			$~jsonParseReturnArray.result ;
+			
+			$~json.error ;
+			$~json.error ;
+			
+			/* extract object */
+			Middle (
+				$~json.text ;
+				$~jsonParseReturnArray.startAt ;
+				$~jsonParseReturnArray.endAt - $~jsonParseReturnArray.startAt + 1
+			)
+		) ;
+		// purge variables
+		$~jsonParseReturnArray.step = "" ;
+		$~jsonParseReturnArray.result = "" ;
+		$~jsonParseReturnArray.startAt = "" ;
+		$~jsonParseReturnArray.endAt = ""
+	] ;
+		~result
+	)
+)

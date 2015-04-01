@@ -1,0 +1,117 @@
+/**
+ * =====================================
+ * ~jsonParseReturnObject
+ *
+ * PURPOSE:
+ *		Extract all text between the current pointer and end of the object.
+ *
+ * RETURNS:
+ *		json object as text
+ *
+ * PARAMETERS:
+ *		
+ *
+ * DEPENDENCIES:
+ *		Pointer is expected to be at { starting the object.
+ *		Custom Functions:
+ *			~jsonParseReturnObject	(self: it's recursive!)
+ *			~jsonParseError
+ *			~jsonParseNext
+ *
+ * NOTES:
+ *		TODO: future version
+ *			This function is very inefficient at the moment because it is parsing
+ *			all values in the object, rather than passing over them to find the end.
+ *			I plan to revise this function in a future version.
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	/* Step 0, set-up */
+	not $~jsonParseReturnObject.step ;
+	Let ( [
+		~result = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
+			~jsonParseError ( "Pointer was not pointed at start of an object" )
+		) & ~jsonParseWhitespace ;
+		
+		/* check if object is empty */
+		$~jsonParseReturnObject.endAt = If ( $~json.ch = "}" ;
+			$~json.at & ~jsonDiscardResult ( ~jsonParseNext ( "}" ) ) 
+		) ;
+		
+		$~jsonParseReturnObject.result = ~result ;
+		$~jsonParseReturnObject.step = If (
+			Not IsEmpty ( $~jsonParseReturnObject.result )
+				or $~jsonParseReturnObject.endAt
+			;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseReturnObject
+	) ;
+
+	
+	/* Step 1, main */
+	$~jsonParseReturnObject.step = 1 ;
+	Let ( [
+		~! = ~jsonParseString
+			& ~jsonParseWhitespace
+			& ~jsonParseNext ( ":" )
+			& ~jsonParseWhitespace
+			& ~jsonParseValueSkip
+			& ~jsonParseWhitespace
+		;
+		
+		/* check if at end of object */
+		$~jsonParseReturnObject.endAt = If ( $~json.ch = "}" ;
+			$~json.at & ~jsonDiscardResult ( ~jsonParseNext ( "}" ) ) 
+		) ;
+
+		~! = If ( IsEmpty ( $~json.error ) and Not $~jsonParseReturnObject.endAt ;
+			~jsonParseNext ( "," )
+			& ~jsonParseWhitespace
+		) ;
+		
+		$~jsonParseReturnObject.step = If (
+			Not IsEmpty ( $~json.error )
+				or $~jsonParseReturnObject.endAt
+			;
+			2 ;
+			1
+		)
+	] ;
+		~jsonParseReturnObject
+	) ;
+
+	
+	/* Step 2, clean-up and return result */
+	$~jsonParseReturnObject.step = 2 ;
+	Let ( [
+		~result = Case (
+			$~jsonParseReturnObject.result ;
+			$~jsonParseReturnObject.result ;
+			
+			$~json.error ;
+			$~json.error ;
+			
+			/* extract object */
+			Middle (
+				$~json.text ;
+				$~jsonParseReturnObject.startAt ;
+				$~jsonParseReturnObject.endAt - $~jsonParseReturnObject.startAt + 1
+			)
+		) ;
+		// purge variables
+		$~jsonParseReturnObject.step = "" ;
+		$~jsonParseReturnObject.result = "" ;
+		$~jsonParseReturnObject.startAt = "" ;
+		$~jsonParseReturnObject.endAt = ""
+	] ;
+		~result
+	)
+)

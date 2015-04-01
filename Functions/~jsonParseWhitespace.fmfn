@@ -1,0 +1,26 @@
+/**
+ * =====================================
+ * ~jsonParseWhitespace
+ *
+ * PURPOSE:
+ *		Skip whitespace.
+ *
+ * RETURNS:
+ *		Empty string.
+ *
+ * DEPENDENCIES:
+ *		Custom Functions:
+ *			~jsonParseWhitespace	(self: it's recursive!)
+ *			~jsonParseNext
+ *			~jsonDiscardResult
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+If ( IsEmpty ( $~json.ch ) or $~json.ch > " " ;
+	~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+		& ~jsonParseWhitespace
+)

@@ -1,0 +1,36 @@
+/**
+ * =====================================
+ * ~jsonParseValueSkip
+ *
+ * PURPOSE:
+ *		Find the end of a value.
+ *
+ * RETURNS:
+ *		Empty string.
+ *
+ * PARAMETERS:
+ *		
+ *
+ * DEPENDENCIES:
+ *		Pointer is expected to be at the start of the value (or whitespace before it)
+ *			~jsonDiscardResult
+ *			~jsonParseValue
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/**
+ * TODO: future version
+ * 
+ * Should write a function similar to ~jsonParseValue, but without bothering to convert
+ * escaped characters/unicode back to their original values, when the value is a string.
+ * 
+ * This function is currently a placeholder for that future functionality, which is
+ * meant to improve speed.
+ * 
+ */
+
+~jsonDiscardResult ( ~jsonParseValue )

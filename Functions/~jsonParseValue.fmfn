@@ -1,0 +1,44 @@
+/**
+ * =====================================
+ * ~jsonParseValue
+ *
+ * PURPOSE:
+ *		Extract the value at the current pointer's position.
+ *
+ * RETURNS:
+ *		The extracted value. If the value is an object or array, return the raw json.
+ *
+ * PARAMETERS:
+ *		
+ *
+ * DEPENDENCIES:
+ *		Pointer is expected to be at the start of the value (or whitespace before it)
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+~jsonParseWhitespace
+& Case (
+	$~json.ch = "{" ;
+	~jsonParseReturnObject ;
+	
+	$~json.ch = "[" ;
+	~jsonParseReturnArray ;
+	
+	$~json.ch = "\"" ;
+	~jsonParseString ;
+	
+	$~json.ch = "-"
+		or (
+			$~json.ch ≥ 0
+			and $~json.ch ≤ 9
+		)
+	;
+	~jsonParseNumber ;
+	
+	/* else */
+	~jsonParseWord
+)

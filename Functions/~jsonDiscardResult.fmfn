@@ -1,0 +1,20 @@
+/**
+ * =====================================
+ * ~jsonDiscardResult ( value )
+ *
+ * RETURNS:
+ *		An Empty string.
+ *
+ * PARAMETERS:
+ *		value = typically the output of a function/expression
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+""

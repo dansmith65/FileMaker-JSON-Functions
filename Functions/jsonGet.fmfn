@@ -1,0 +1,28 @@
+/**
+ * =====================================
+ * jsonGet ( json ; keyOrIndex )
+ *
+ * RETURNS:
+ *		The value specified by keyOrIndex if it exists, otherwise return "json:notFound".
+ *		If json value is null, will return "json:null"
+ *		true/false will be returned as the FileMaker equivalent 1/0.
+ *
+ * PARAMETERS:
+ *		json = the json string
+ *		keyOrIndex = object property key (name) or array index (position)
+ *
+ * DEPENDENCIES:
+ *		
+ *
+ * NOTES:
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+If ( ~jsonFindValue ( json ; keyOrIndex ) ;
+	~jsonParseString ;
+	"json:notFound"
+)

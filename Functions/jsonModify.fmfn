@@ -1,0 +1,56 @@
+/**
+ * =====================================
+ * jsonModify ( json ; keyOrIndex ; newValue )
+ *
+ * PURPOSE:
+ *		Add or modify an object by it's key, or array by it's index.
+ *
+ * RETURNS:
+ *		The modified JSON.
+ *
+ * PARAMETERS:
+ *		json = the json string
+ *		keyOrIndex = object property key (name) or array index (position)
+ *		newValue = string, number, or a named constant:
+ *			json:true, json:false, json:null
+ *			should NOT be an object or array (these will be encoded as strings)
+ *
+ * DEPENDENCIES:
+ *		
+ *
+ * NOTES:
+ *
+ * TODO:
+ *		Determine how to add an array value
+ *			- should it allow positional insertion?
+ *				- insert before other values
+ *					- negative number?
+ *					- "unshift" (like the json method) ?
+ *				- insert between values
+ *					- decimal: 2.5 would insert after 2?
+ *				- insert at end
+ *					- I assume this would be the most common use-case
+ *					- empty keyOrIndex value?
+ *			- if the index is higher than array size + 1, should it pad the array
+ *			  with null values like javascript does?
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+If ( ~jsonFindValue ( json ; keyOrIndex ) ;
+	/**
+	 * value was found
+	 * The pointer stores the starting position of the value.
+	 * Get all text before the value & encode the new value & get all text after the value
+	 */
+	"TODO" ;
+
+	/**
+	 * value was NOT found
+	 * add a comma, then the new value after the last value
+	 */
+	"TODO"
+)
