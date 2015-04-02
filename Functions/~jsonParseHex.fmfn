@@ -50,6 +50,7 @@ Case (
 				or IsEmpty ( ~hex )
 				or ~hex < 0
 				or ~hex > 15
+				or $~jsonParseHex.i = 4
 			;
 			2 ;
 			1
