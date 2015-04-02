@@ -21,22 +21,32 @@
  * =====================================
  */
 
-If ( $~json.ch = "-" ;
-	"-" & ~jsonDiscardResult ( ~jsonParseNext ( "-" ) )
-)
+/* logging start */ LogWriterMemoryCreateEntry (
+	"~jsonParseNumber start"
+) & /* logging end */
 
-& ~jsonParseDigits ( "" )
+GetAsNumber (
+	If ( $~json.ch = "-" ;
+		"-" & ~jsonDiscardResult ( ~jsonParseNext ( "-" ) )
+	)
 
-& If ( $~json.ch = "." ;
-	"." & ~jsonDiscardResult ( ~jsonParseNext ( "." ) )
+	& ~jsonParseDigits ( "" )
+
+	& If ( $~json.ch = "." ;
+		"." & ~jsonDiscardResult ( ~jsonParseNext ( "." ) )
+		& ~jsonParseDigits ( "" )
+	)
+
+	& If ( $~json.ch = "e" ;
+		$~json.ch & ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+		& If ( $~json.ch = "-" or $~json.ch = "+" ;
+			$~json.ch & ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+		)
+	)
+
 	& ~jsonParseDigits ( "" )
 )
 
-& If ( $~json.ch = "e" ;
-	$~json.ch & ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
-	& If ( $~json.ch = "-" or $~json.ch = "+" ;
-		$~json.ch & ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
-	)
-)
-
-& ~jsonParseDigits ( "" )
+/* logging start */ & LogWriterMemoryCreateEntry (
+	"~jsonParseNumber end"
+) /* logging end */
