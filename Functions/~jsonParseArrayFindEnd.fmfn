@@ -1,9 +1,9 @@
 /**
  * =====================================
- * ~jsonParseObjectFindEnd ( step )
+ * ~jsonParseArrayFindEnd ( step )
  *
  * PURPOSE:
- *		Move pointer to the end of the object.
+ *		Move pointer to the end of the array.
  *
  * RETURNS:
  *		Empty string.
@@ -14,13 +14,12 @@
  *			(stores the current state of processing this recursive function is in)
  *
  * DEPENDENCIES:
- *		Pointer is expected to be at { starting the object.
+ *		Pointer is expected to be at [ starting the array.
  *		Custom Functions:
- *			~jsonParseObjectFindEnd		(self: it's recursive!)
+ *			~jsonParseArrayFindEnd		(self: it's recursive!)
  *			~jsonParseError
  *			~jsonParseNext
  *			~jsonParseWhitespace
- *			~jsonParseString
  *			~jsonParseValueSkip
  *
  * NOTES:
@@ -42,21 +41,21 @@ Case (
 	not step ;
 	Let ( [
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
-			"~jsonParseObjectFindEnd [step:0]"
+			"~jsonParseArrayFindEnd [step:0]"
 		) & /* logging end */ "" ;
 		
-		~! = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
-			~jsonParseError ( "Pointer was not at start of an object" )
+		~! = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
+			~jsonParseError ( "Pointer was not at start of an array" )
 		) ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;
 			~jsonParseWhitespace
 		) ;
 		
-		/* check if object is empty */
+		/* check if array is empty */
 		~endFound = If ( IsEmpty ( $~json.error ) ;
-			If ( $~json.ch = "}" ;
-				Not IsEmpty ( ~jsonParseNext ( "}" ) )
+			If ( $~json.ch = "]" ;
+				Not IsEmpty ( ~jsonParseNext ( "]" ) )
 			)
 		) ;
 		
@@ -68,7 +67,7 @@ Case (
 			1	/* main */
 		)
 	] ;
-		~jsonParseObjectFindEnd ( ~nextStep )
+		~jsonParseArrayFindEnd ( ~nextStep )
 	) ;
 	
 	
@@ -80,24 +79,8 @@ Case (
 	step = 1 ;
 	Let ( [
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
-			"~jsonParseObjectFindEnd [step:1]"
+			"~jsonParseArrayFindEnd [step:1]"
 		) & /* logging end */ "" ;
-		
-		~! = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseString
-		) ;
-		
-		~! = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseWhitespace
-		) ;
-		
-		~! = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseNext ( ":" )
-		) ;
-		
-		~! = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseWhitespace
-		) ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;
 			~jsonParseValueSkip
@@ -107,14 +90,14 @@ Case (
 			~jsonParseWhitespace
 		) ;
 		
-		/* check if at end of object */
+		/* check if at end of array */
 		~endFound = If ( IsEmpty ( $~json.error ) ;
-			If ( $~json.ch = "}" ;
-				Not IsEmpty ( ~jsonParseNext ( "}" ) )
+			If ( $~json.ch = "]" ;
+				Not IsEmpty ( ~jsonParseNext ( "]" ) )
 			)
 		) ;
 		
-		/* advance pointer to start of next key */
+		/* advance pointer to start of next value*/
 		~! = If ( IsEmpty ( $~json.error ) ;
 			If ( Not ~endFound ;
 				~jsonParseNext ( "," )
@@ -132,7 +115,7 @@ Case (
 			1	/* main */
 		)
 	] ;
-		~jsonParseObjectFindEnd ( ~nextStep )
+		~jsonParseArrayFindEnd ( ~nextStep )
 	) ;
 	
 	
@@ -144,7 +127,7 @@ Case (
 	step = 2 ;
 	Let ( [
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
-			"~jsonParseObjectFindEnd [step:2]"
+			"~jsonParseArrayFindEnd [step:2]"
 		) & /* logging end */ "" ;
 		
 		/* no local variables to clean up */

@@ -53,7 +53,28 @@
 	
 	/* ARRAY */
 	$~json.ch = "[" ;
-	~jsonParseReturnArray ;
+	Let ( [
+		/**
+		 * Offset start by -1 because it is actually pointing at the first
+		 * character after the opening bracket and I want to retrieve the entire
+		 * value starting with the opening bracket.
+		 */
+		~start = $~json.at  - 1 ;
+		~! = ~jsonParseArrayFindEnd ( "" ) ;
+		~end =  $~json.at ;
+		~array = If ( IsEmpty ( $~json.error ) ;
+			Middle (
+				$~json.text ;
+				~start ;
+				~end - ~start - 1
+			)
+		)
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			~array ;
+			"json:error"
+		)
+	) ;
 	
 	$~json.ch = "\"" ;
 	~jsonParseString ;
