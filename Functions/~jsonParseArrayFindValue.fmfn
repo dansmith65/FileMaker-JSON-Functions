@@ -26,13 +26,20 @@ Case (
 	not $~jsonParseArrayFindValue.step ;
 	Let ( [
 		$~jsonParseArrayFindValue.i = -1 ;
+		
+		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseArrayFindValue start [step:" & $~jsonParseArrayFindValue.step & "]"
+				& " [index:" & index & "]"
+				& " [i:" & $~jsonParseArrayFindValue.i & "]"
+		) & /* logging end */ "" ;
+
 		~result = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
 			"json:error"
 		) & ~jsonParseWhitespace ;
 		
 		/* check if array is empty */
 		~result = Case (
-			Not IsEmpty ( ~result ) ;
+			not IsEmpty ( ~result ) ;
 			~result ;
 			
 			$~json.ch = "]" ;
@@ -41,7 +48,7 @@ Case (
 		
 		$~jsonParseArrayFindValue.result = ~result ;
 		$~jsonParseArrayFindValue.step = If (
-			Not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
+			not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
 			2 ;
 			1
 		)
@@ -54,23 +61,32 @@ Case (
 	$~jsonParseArrayFindValue.step = 1 ;
 	Let ( [
 		$~jsonParseArrayFindValue.i = $~jsonParseArrayFindValue.i + 1 ;
+		
+		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseArrayFindValue start [step:" & $~jsonParseArrayFindValue.step & "]"
+				& " [index:" & index & "]"
+				& " [i:" & $~jsonParseArrayFindValue.i & "]"
+		) & /* logging end */ "" ;
+
 		~result = If (
 			$~jsonParseArrayFindValue.i = index ;
 			/* found the value it was looking for! */
 			True ;
-			~jsonParseWhitespace
+			/* else: skip the current value */
+			~jsonParseValueSkip
+				& ~jsonParseWhitespace
 		) ;
 		
-		/* check if at end of object */
+		/* check if at end of array */
 		~result = Case (
-			Not IsEmpty ( ~result ) ;
+			not IsEmpty ( ~result ) ;
 			~result ;
 			
 			$~json.ch = "]" ;
 			False & ~jsonDiscardResult ( ~jsonParseNext ( "]" ) ) 
 		) ;
 
-		/* if there was no error, and index did not match, and not at end of object, advance pointer to next index */
+		/* if there was no error, and index did not match, and not at end of array, advance pointer to next index */
 		~! = If ( IsEmpty ( $~json.error ) and IsEmpty ( ~result ) ;
 			~jsonParseNext ( "," )
 			& ~jsonParseWhitespace
@@ -78,7 +94,7 @@ Case (
 		
 		$~jsonParseArrayFindValue.result = ~result ;
 		$~jsonParseArrayFindValue.step = If (
-			Not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
+			not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
 			2 ;
 			1
 		)
@@ -90,6 +106,11 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseArrayFindValue.step = 2 ;
 	Let ( [
+		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseArrayFindValue end [i:" & $~jsonParseArrayFindValue.i & "]"
+				& " [index:" & index & "]"
+		) & /* logging end */ "" ;
+
 		~result = $~jsonParseArrayFindValue.result ;
 		// purge variables
 		$~jsonParseArrayFindValue.step = "" ;
