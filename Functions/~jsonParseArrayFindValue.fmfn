@@ -27,7 +27,7 @@ Case (
 	Let ( [
 		$~jsonParseArrayFindValue.i = -1 ;
 		
-		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue start [step:" & $~jsonParseArrayFindValue.step & "]"
 				& " [index:" & index & "]"
 				& " [i:" & $~jsonParseArrayFindValue.i & "]"
@@ -62,7 +62,7 @@ Case (
 	Let ( [
 		$~jsonParseArrayFindValue.i = $~jsonParseArrayFindValue.i + 1 ;
 		
-		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue start [step:" & $~jsonParseArrayFindValue.step & "]"
 				& " [index:" & index & "]"
 				& " [i:" & $~jsonParseArrayFindValue.i & "]"
@@ -106,7 +106,7 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseArrayFindValue.step = 2 ;
 	Let ( [
-		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue end [i:" & $~jsonParseArrayFindValue.i & "]"
 				& " [index:" & index & "]"
 		) & /* logging end */ "" ;

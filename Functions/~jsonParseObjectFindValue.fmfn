@@ -102,7 +102,7 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseObjectFindValue.step = 2 ;
 	Let ( [
-		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindValue end [i:" & $~jsonParseObjectFindValue.i & "]"
 		) & /* logging end */ "" ;
 

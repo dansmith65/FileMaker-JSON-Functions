@@ -91,7 +91,7 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseString.step = 2 ;
 	Let ( [
-		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseString end [i:" & $~jsonParseString.i & "]"
 		) & /* logging end */ "" ;
 

@@ -88,7 +88,7 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseReturnArray.step = 2 ;
 	Let ( [
-		!~ = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseReturnArray end [i:" & $~jsonParseReturnArray.i & "]"
 				& " [startAt:" & $~jsonParseReturnArray.startAt & "]"
 				& " [endAt:" & $~jsonParseReturnArray.endAt & "]"

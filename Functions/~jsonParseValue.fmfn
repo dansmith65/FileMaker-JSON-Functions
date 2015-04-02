@@ -26,9 +26,32 @@
 
 ~jsonParseWhitespace
 & Case (
+	/* OBJECT */
 	$~json.ch = "{" ;
-	~jsonParseReturnObject ;
+	Let ( [
+		/**
+		 * Offset start by -1 because it is actually pointing at the first
+		 * character after the opening bracket and I want to retrieve the entire
+		 * value starting with the opening bracket.
+		 */
+		~start = $~json.at  - 1 ;
+		~! = ~jsonParseObjectFindEnd ( "" ) ;
+		~end =  $~json.at ;
+		~object = If ( IsEmpty ( $~json.error ) ;
+			Middle (
+				$~json.text ;
+				~start ;
+				~end - ~start - 1
+			)
+		)
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			~object ;
+			"json:error"
+		)
+	) ;
 	
+	/* ARRAY */
 	$~json.ch = "[" ;
 	~jsonParseReturnArray ;
 	
