@@ -16,7 +16,10 @@
  *			should NOT be an object or array (these will be encoded as strings)
  *
  * DEPENDENCIES:
- *		
+ *		Custom Functions:
+ *			~jsonFindValue
+ *			~jsonParseValueSkip
+ *			~jsonEncodeValue
  *
  * NOTES:
  *
@@ -46,8 +49,42 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 	 * The pointer stores the starting position of the value.
 	 * Get all text before the value & encode the new value & get all text after the value
 	 */
-	"TODO" ;
+	Let ( [
+		/**
+		 * get text before the value
+		 * Offset length by -2 because it is actually pointing at the first
+		 * character after the value.
+		 */
+		~jsonBefore = Middle (
+			$~json.text ;
+			1 ;
+			$~json.at - 2
+		) ;
+		/**
+		 * get text after the value
+		 * Offset starting point by -1 because it is actually pointing at the second
+		 * character after the value.
+		 */
+		~! = ~jsonParseValueSkip ;
+		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
+			Middle (
+				$~json.text ;
+				$~json.at - 1 ;
+				Length ( $~json.text )
+			)
+		) ;
+		~newValueEncoded = If ( IsEmpty ( $~json.error ) ;
+			~jsonEncodeValue ( newValue )
+		)
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			~jsonBefore
+				& ~newValueEncoded
+				& ~jsonAfter
+		)
+	) ;
 
+	
 	/**
 	 * value was NOT found
 	 * add a comma, then the new value after the last value

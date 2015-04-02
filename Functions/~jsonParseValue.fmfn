@@ -34,7 +34,7 @@
 		 * character after the opening bracket and I want to retrieve the entire
 		 * value starting with the opening bracket.
 		 */
-		~start = $~json.at  - 1 ;
+		~start = $~json.at - 1 ;
 		~! = ~jsonParseObjectFindEnd ( "" ) ;
 		~end =  $~json.at ;
 		~object = If ( IsEmpty ( $~json.error ) ;
@@ -59,7 +59,7 @@
 		 * character after the opening bracket and I want to retrieve the entire
 		 * value starting with the opening bracket.
 		 */
-		~start = $~json.at  - 1 ;
+		~start = $~json.at - 1 ;
 		~! = ~jsonParseArrayFindEnd ( "" ) ;
 		~end =  $~json.at ;
 		~array = If ( IsEmpty ( $~json.error ) ;
