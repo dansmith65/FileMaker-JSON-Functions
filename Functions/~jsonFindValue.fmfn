@@ -58,15 +58,17 @@ Let ( [
 		& "json:error"
 	)
 	
-	/* clean up variables */
-	/* TODO: enable for production use
+	/* clean-up */
 	& Let ( [
+		/* save error to public variable */
+		$json.error = $~json.error
+		/* TODO: enable for production use
+		; $~json.error = ""
 		$~json.ch = "" ;
 		$~json.at = 1 ;
-		$~json.text = json ;
-		$~json.error = ""
+		$~json.text = json
+		*/
 	] ;
 		""
 	)
-	*/
 )
