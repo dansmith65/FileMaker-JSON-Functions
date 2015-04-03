@@ -31,6 +31,12 @@ Case (
 	value = "json:null" ;
 	"null" ;
 	
+	IsEmpty ( value ) ;
+	"\"\"" ;
+	
+	value = "?" ;
+	"\"?\"" ;
+	
 	/**
 	 * value is too long to be a number
 	 *
