@@ -1,0 +1,54 @@
+/**
+ * =====================================
+ * ~jsonParseIsEmpty
+ *
+ * RETURNS:
+ *		Boolean True if json is an empty object or array, False if it isn't.
+ *
+ * PARAMETERS:
+ *		step = always leave empty when calling this function
+ *			(stores the current state of processing this recursive function is in)
+ *
+ * DEPENDENCIES:
+ *		$~json.text should already contain the json to operate on
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-02 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Let ( [
+	/* initialize parsing variables */
+	$~json.ch = " " ;
+	$~json.at = 1 ;
+	
+	~! = ~jsonParseWhitespace ;
+	
+	~! = If ( $~json.ch ≠ "{" and $~json.ch ≠ "[" ;
+		~jsonParseError (
+			"json was a string, number, or word. An object or array was expected. Occurred in ~jsonParseIsEmpty function."
+		)
+	) ;
+	
+	~! = If ( IsEmpty ( $~json.error ) ;
+		~jsonParseNext ( "" )
+	) ;
+	
+	~! = If ( IsEmpty ( $~json.error ) ;
+		~jsonParseWhitespace
+	) ;
+	
+	/* check if object is empty */
+	~isEmpty = If ( IsEmpty ( $~json.error ) ;
+		$~json.ch = "}" or $~json.ch = "]"
+	) ;
+	
+	~! = /* logging start */ LogWriterMemoryCreateEntry (
+		"~jsonParseIsEmpty: " & If ( ~isEmpty ; "true" ; "false" )
+	) & /* logging end */ "" ;
+	
+	~! = ""
+] ;
+	~isEmpty
+)

@@ -1,0 +1,92 @@
+/**
+ * =====================================
+ * ~jsonParseFindEnd ( step )
+ *
+ * PURPOSE:
+ *		Move pointer to the end of the json.
+ *
+ * RETURNS:
+ *		Empty string.
+ *
+ * PARAMETERS:
+ *		step = always leave empty when calling this function
+ *			(stores the current state of processing this recursive function is in)
+ *
+ * DEPENDENCIES:
+ *		$~json.text should already contain the json to operate on
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-02 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	/**
+	 ***************************************************************************
+	 * STEP 0: SET-UP
+	 ***************************************************************************
+	 */
+	not step ;
+	Let ( [
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseFindEnd [step:0]"
+		) & /* logging end */ "" ;
+		
+		/* initialize parsing variables */
+		$~json.ch = " " ;
+		$~json.at = Length ( $~json.text ) ;
+		
+		~nextStep = 1	/* main */
+	] ;
+		~jsonParseFindEnd ( ~nextStep )
+	) ;
+	
+	
+	/**
+	 ***************************************************************************
+	 * STEP 1: MAIN
+	 ***************************************************************************
+	 */
+	step = 1 ;
+	Let ( [
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseFindEnd [step:1]"
+		) & /* logging end */ "" ;
+		
+		/* same as jsonParseNext, but in reverse */
+		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+		$~json.at = $~json.at - 1 ;
+		
+		~endFound =
+			$~json.ch = "}"
+			or $~json.ch = "]"
+		;
+		
+		~nextStep = If (
+			~endFound ;
+			2 ;	/* clean-up */
+			1	/* main */
+		)
+	] ;
+		~jsonParseFindEnd ( ~nextStep )
+	) ;
+	
+	
+	/**
+	 ***************************************************************************
+	 * STEP 2: CLEAN-UP
+	 ***************************************************************************
+	 */
+	step = 2 ;
+	Let ( [
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseFindEnd [step:2]"
+		) & /* logging end */ "" ;
+		
+		/* no local variables to clean up */
+		~! = ""
+	] ;
+		""
+	)
+)

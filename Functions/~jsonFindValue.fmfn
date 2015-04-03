@@ -10,7 +10,8 @@
  *		"json:error" if an error occurred
  *
  * PARAMETERS:
- *		value = a valid number
+ *		json = the json string
+ *		keyOrIndex = object property key (name) or array index (position)
  *
  * DEPENDENCIES:
  *		~jsonDiscardResult
@@ -63,6 +64,9 @@ Let ( [
 		/* save error to public variable */
 		$json.error = $~json.error
 		/* TODO: enable for production use
+			actually, as currently implemented, this function can't clear these
+			values because calling functions are using them.
+			So, any function that calls this one needs to clear these values.
 		; $~json.error = ""
 		$~json.ch = "" ;
 		$~json.at = 1 ;

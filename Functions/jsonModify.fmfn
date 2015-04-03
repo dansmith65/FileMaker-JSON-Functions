@@ -60,6 +60,7 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 			1 ;
 			$~json.at - 2
 		) ;
+		
 		/**
 		 * get text after the value
 		 * Offset starting point by -1 because it is actually pointing at the second
@@ -73,13 +74,15 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 				Length ( $~json.text )
 			)
 		) ;
-		~newValueEncoded = If ( IsEmpty ( $~json.error ) ;
+		
+		/* TODO: only encode the new value if it isn't already JSON */
+		~newValue = If ( IsEmpty ( $~json.error ) ;
 			~jsonEncodeValue ( newValue )
 		)
 	] ;
 		If ( IsEmpty ( $~json.error ) ;
 			~jsonBefore
-				& ~newValueEncoded
+				& ~newValue
 				& ~jsonAfter
 		)
 	) ;
@@ -87,7 +90,56 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 	
 	/**
 	 * value was NOT found
-	 * add a comma, then the new value after the last value
 	 */
-	"TODO"
+	Let ( [
+		/**
+		 * determine if the json is empty: {} or []
+		 */
+		~isEmpty = ~jsonParseIsEmpty ;
+		
+		/**
+		 * get the position of the last closing bracket
+		 */
+		~endPosition = If ( IsEmpty ( $~json.error ) ;
+			~jsonParseFindEnd ( "" )
+		) ;
+		
+		/**
+		 * get text before the closing bracket
+		 */
+		~jsonBefore =  If ( IsEmpty ( $~json.error ) ;
+			Middle (
+				$~json.text ;
+				1 ;
+				$~json.at
+			)
+		) ;
+		
+		/**
+		 * get closing bracket and all text after it
+		 * this will preserver original trailing whitespace
+		 */
+		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
+			Middle (
+				$~json.text ;
+				$~json.at + 1 ;
+				Length ( $~json.text )
+			)
+		) ;
+		
+		/* TODO: only encode the new value if it isn't already JSON */
+		~newValue = If ( IsEmpty ( $~json.error ) ;
+			~jsonEncodeValue ( newValue )
+		)
+	] ;
+		~jsonBefore
+		& If ( not ~isEmpty ; "," )
+		& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
+			/* keyOrIndex is a string, so assume it's meant to be an object key */
+			~jsonEncodeString ( keyOrIndex )
+			& ":"
+		)
+		& ~newValue
+		& ~jsonAfter
+	)
 )
