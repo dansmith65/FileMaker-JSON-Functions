@@ -25,6 +25,7 @@
 	/**
 	 * TODO: this would incorrectly detect json on a value like:
 	 *	{this is a note in curly-brances}
+	 * TODO: would also fail if there is leading/trailing whitespace
 	 */
 	Let ( [
 		~firstAndLast = Left ( value ; 1 ) & Right ( value ; 1 )

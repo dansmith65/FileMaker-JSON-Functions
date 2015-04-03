@@ -75,9 +75,24 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 			)
 		) ;
 		
-		/* TODO: only encode the new value if it isn't already JSON */
 		~newValue = If ( IsEmpty ( $~json.error ) ;
-			~jsonEncodeValue ( newValue )
+			If (
+				/* return the value as-is if it's a json array or object */
+				/**
+				 * TODO: this would incorrectly detect json on a value like:
+				 *	{this is a note in curly-brances}
+				 * TODO: would also fail if there is leading/trailing whitespace
+				 */
+				Let ( [
+					~firstAndLast = Left ( newValue ; 1 ) & Right ( newValue ; 1 )
+				] ;
+					~firstAndLast = "[]"		/* array */
+					or ~firstAndLast = "{}"		/* object */
+				) ;
+				newValue ;
+
+				~jsonEncodeValue ( newValue )
+			)
 		)
 	] ;
 		If ( IsEmpty ( $~json.error ) ;
@@ -127,9 +142,24 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 			)
 		) ;
 		
-		/* TODO: only encode the new value if it isn't already JSON */
 		~newValue = If ( IsEmpty ( $~json.error ) ;
-			~jsonEncodeValue ( newValue )
+			If (
+				/* return the value as-is if it's a json array or object */
+				/**
+				 * TODO: this would incorrectly detect json on a value like:
+				 *	{this is a note in curly-brances}
+				 * TODO: would also fail if there is leading/trailing whitespace
+				 */
+				Let ( [
+					~firstAndLast = Left ( newValue ; 1 ) & Right ( newValue ; 1 )
+				] ;
+					~firstAndLast = "[]"		/* array */
+					or ~firstAndLast = "{}"		/* object */
+				) ;
+				newValue ;
+
+				~jsonEncodeValue ( newValue )
+			)
 		)
 	] ;
 		~jsonBefore
