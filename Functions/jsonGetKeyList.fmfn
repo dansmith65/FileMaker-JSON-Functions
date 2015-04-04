@@ -1,0 +1,70 @@
+/**
+ * =====================================
+ * jsonGetKeyList ( json )
+ *
+ * RETURNS:
+ *		Return-delimited list of member properties from an object or indexes
+ *		from an array. It only goes one level deep.
+ *
+ * PARAMETERS:
+ *		json = the json string
+ *
+ * DEPENDENCIES:
+ *		
+ *
+ * NOTES:
+ *
+ * HISTORY:
+ *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/* logging start */ LogWriterMemoryCreateEntry (
+	"jsonGetKeyList start"
+) & /* logging end */
+
+Let ( [
+	/* initialize parsing variables */
+	$~json.ch = " " ;
+	$~json.at = 1 ;
+	$~json.text = json ;
+	$~json.error = ""
+] ;
+	~jsonParseWhitespace
+	& Case (
+		/* object */
+		$~json.ch = "{" ;
+		~jsonParseObjectGetKeyList ( "" ) ;
+		
+		/* array */
+		$~json.ch = "[" ;
+		~jsonParseArrayGetKeyList ( "" ) ;
+		
+		/* else: string, number, or word */
+		~jsonDiscardResult ( ~jsonParseError (
+			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected."
+		) )
+		& "Error: "
+		& ~jsonParseError (
+			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected."
+		)
+	)
+	
+	/* clean-up */
+	& Let ( [
+		/* save error to public variable */
+		$json.error = $~json.error
+		/* TODO: enable for production use
+			actually, as currently implemented, this function can't clear these
+			values because calling functions are using them.
+			So, any function that calls this one needs to clear these values.
+		; $~json.error = ""
+		$~json.ch = "" ;
+		$~json.at = 1 ;
+		$~json.text = json
+		*/
+	] ;
+		""
+	)
+)
