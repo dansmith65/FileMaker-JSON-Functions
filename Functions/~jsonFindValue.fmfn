@@ -6,8 +6,7 @@
  *		Find the starting position of a value.
  *
  * RETURNS:
- *		Boolean True if value is found, False if it isn't
- *		"json:error" if an error occurred
+ *		Boolean True if value is found, False if it isn't or if Error.
  *
  * PARAMETERS:
  *		json = the json string
@@ -53,10 +52,10 @@ Let ( [
 		~jsonParseArrayFindValue ( keyOrIndex ) ;
 		
 		/* else: string, number, or word */
-		~jsonDiscardResult ( ~jsonParseError (
+		False
+		& ~jsonDiscardResult ( ~jsonParseError (
 			"value sent to ~jsonFindValue function was a string, number, or word. An object or array was expected."
 		) )
-		& "json:error"
 	)
 	
 	/* clean-up */

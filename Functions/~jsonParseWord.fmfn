@@ -4,7 +4,7 @@
  *
  * RETURNS:
  *		1 for true, 0 for false, "json:null" for null
- *		"json:error" if an error occurred
+ *		Error message on error.
  *
  * PARAMETERS:
  *		
@@ -32,7 +32,7 @@ Case (
 		and Not IsEmpty ( ~jsonParseNext ( "e" ) )
 		;
 		True ;
-		"json:error"
+		"Error: " & $~json.error
 	) ;
 	
 	$~json.ch = "f" ;
@@ -43,7 +43,7 @@ Case (
 		and Not IsEmpty ( ~jsonParseNext ( "e" ) )
 		;
 		False ;
-		"json:error"
+		"Error: " & $~json.error
 	) ;
 	
 	$~json.ch = "n" ;
@@ -53,6 +53,9 @@ Case (
 		and Not IsEmpty ( ~jsonParseNext ( "l" ) )
 		;
 		"json:null" ;
-		"json:error"
-	)
+		"Error: " & $~json.error
+	) ;
+	
+	/* else */
+	~jsonParseError ( "Unexpected " & Quote ( $~json.ch ) )
 )

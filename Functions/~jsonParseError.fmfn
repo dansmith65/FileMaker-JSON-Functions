@@ -3,14 +3,12 @@
  * ~jsonParseError ( message )
  * 
  * RETURNS:
- *		Message parameter formatted as an error
+ *		All Errors in a format suitable for returning to the end user.
  *
  * PARAMETERS:
  *		message = description of the error
  *
  * DEPENDENCIES:
- *		Custom Functions:
- *			~jsonEncodeString
  *
  * HISTORY:
  *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
@@ -37,5 +35,5 @@ Let ( [
 	$~json.ch = "" ;
 	$~json.at = -1
 ] ;
-	~jsonEncodeString ( message )
+	"Error: " & $~json.error
 )

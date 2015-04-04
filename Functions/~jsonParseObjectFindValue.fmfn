@@ -6,8 +6,7 @@
  *		Move pointer to the start of the value for a specified key.
  *
  * RETURNS:
- *		Boolean True if value is found, False if it isn't
- *		"json:error" if an error occurred
+ *		Boolean True if value is found, False if it isn't or if Error.
  *
  * PARAMETERS:
  *		key = object property/name
@@ -30,7 +29,7 @@ Case (
 	not $~jsonParseObjectFindValue.step ;
 	Let ( [
 		~result = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
-			"json:error"
+			"Error: " & $~json.error  /* TODO: this message does not need to be set here */
 		) & ~jsonParseWhitespace ;
 		
 		/* check if object is empty */
@@ -44,7 +43,9 @@ Case (
 		
 		$~jsonParseObjectFindValue.result = ~result ;
 		$~jsonParseObjectFindValue.step = If (
-			Not IsEmpty ( $~jsonParseObjectFindValue.result ) ;
+			Not IsEmpty ( $~json.error )
+				or Not IsEmpty ( $~jsonParseObjectFindValue.result )
+			;
 			2 ;
 			1
 		)
@@ -90,7 +91,9 @@ Case (
 		$~jsonParseObjectFindValue.i = $~jsonParseObjectFindValue.i + 1 ;
 		$~jsonParseObjectFindValue.result = ~result ;
 		$~jsonParseObjectFindValue.step = If (
-			Not IsEmpty ( $~jsonParseObjectFindValue.result ) ;
+			Not IsEmpty ( $~json.error )
+				or Not IsEmpty ( $~jsonParseObjectFindValue.result )
+			;
 			2 ;
 			1
 		)
@@ -106,7 +109,10 @@ Case (
 			"~jsonParseObjectFindValue end [i:" & $~jsonParseObjectFindValue.i & "]"
 		) & /* logging end */ "" ;
 
-		~result = $~jsonParseObjectFindValue.result ;
+		~result = If ( IsEmpty ( $~json.error ) ;
+			$~jsonParseObjectFindValue.result ;
+			False
+		) ;
 		// purge variables
 		$~jsonParseObjectFindValue.i = "" ;
 		$~jsonParseObjectFindValue.step = "" ;

@@ -24,5 +24,8 @@
 
 If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 	~jsonParseValue ;
-	"json:notFound"
+	If ( IsEmpty ( $~json.error ) ;
+		"" ; /* not found */
+		"Error: " & $~json.error
+	)
 )

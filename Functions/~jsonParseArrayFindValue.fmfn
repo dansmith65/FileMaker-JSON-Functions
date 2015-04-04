@@ -6,8 +6,7 @@
  *		Move pointer to the start of the value for a specified index.
  *
  * RETURNS:
- *		Boolean True if value is found, False if it isn't
- *		"json:error" if an error occurred
+ *		Boolean True if value is found, False if it isn't or if Error.
  *
  * PARAMETERS:
  *		index = array index/location (0-based)
@@ -34,7 +33,7 @@ Case (
 		) & /* logging end */ "" ;
 
 		~result = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
-			"json:error"
+			"Error: " & $~json.error	/* TODO: this error message doesn't need to be set here */
 		) & ~jsonParseWhitespace ;
 		
 		/* check if array is empty */
@@ -48,7 +47,9 @@ Case (
 		
 		$~jsonParseArrayFindValue.result = ~result ;
 		$~jsonParseArrayFindValue.step = If (
-			not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
+			Not IsEmpty ( $~json.error )
+				or Not IsEmpty ( $~jsonParseArrayFindValue.result )
+			;
 			2 ;
 			1
 		)
@@ -94,7 +95,9 @@ Case (
 		
 		$~jsonParseArrayFindValue.result = ~result ;
 		$~jsonParseArrayFindValue.step = If (
-			not IsEmpty ( $~jsonParseArrayFindValue.result ) ;
+			Not IsEmpty ( $~json.error )
+				or Not IsEmpty ( $~jsonParseArrayFindValue.result )
+			;
 			2 ;
 			1
 		)
@@ -111,7 +114,10 @@ Case (
 				& " [index:" & index & "]"
 		) & /* logging end */ "" ;
 
-		~result = $~jsonParseArrayFindValue.result ;
+		~result = If ( IsEmpty ( $~json.error ) ;
+			$~jsonParseArrayFindValue.result ;
+			False
+		) ;
 		// purge variables
 		$~jsonParseArrayFindValue.step = "" ;
 		$~jsonParseArrayFindValue.result = "" ;

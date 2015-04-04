@@ -47,7 +47,7 @@
 	] ;
 		If ( IsEmpty ( $~json.error ) ;
 			~object ;
-			"json:error"
+			"Error: " & $~json.error
 		)
 	) ;
 	
@@ -72,7 +72,7 @@
 	] ;
 		If ( IsEmpty ( $~json.error ) ;
 			~array ;
-			"json:error"
+			"Error: " & $~json.error
 		)
 	) ;
 	
