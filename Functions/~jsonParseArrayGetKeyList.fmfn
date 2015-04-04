@@ -38,7 +38,7 @@ Case (
 			"~jsonParseArrayGetKeyList [step:0]"
 		) & /* logging end */ "" ;
 		
-		/* initialize variable */
+		/* initialize variables */
 		$~jsonParseArrayGetKeyList.result = "" ;
 		$~jsonParseArrayGetKeyList.i = -1 ;
 		
@@ -53,7 +53,8 @@ Case (
 		/* check if array is empty */
 		~endFound = If ( IsEmpty ( $~json.error ) ;
 			If ( $~json.ch = "]" ;
-				not IsEmpty ( ~jsonParseNext ( "]" ) )
+				True
+					& ~jsonDiscardResult ( ~jsonParseNext ( "]" ) )
 			)
 		) ;
 		
@@ -77,14 +78,13 @@ Case (
 	step = 1 ;
 	Let ( [
 		$~jsonParseArrayGetKeyList.i = $~jsonParseArrayGetKeyList.i + 1 ;
+		
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayGetKeyList [step:1]"
 				& " [i:" & $~jsonParseArrayGetKeyList.i & "]"
 		) & /* logging end */ "" ;
 		
-		~key = If ( IsEmpty ( $~json.error ) ;
-			$~jsonParseArrayGetKeyList.i
-		) ;
+		~key = $~jsonParseArrayGetKeyList.i ;
 		
 		$~jsonParseArrayGetKeyList.result = If ( IsEmpty ( $~json.error ) ;
 			List (
@@ -104,17 +104,16 @@ Case (
 		/* check if at end of array */
 		~endFound = If ( IsEmpty ( $~json.error ) ;
 			If ( $~json.ch = "]" ;
-				not IsEmpty ( ~jsonParseNext ( "]" ) )
+				True
+					& ~jsonDiscardResult ( ~jsonParseNext ( "]" ) )
 			)
 		) ;
 		
 		/* advance pointer to start of next key */
-		~! = If ( IsEmpty ( $~json.error ) ;
-			If ( not ~endFound ;
-				~jsonParseNext ( "," )
-				& If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
-				)
+		~! = If ( IsEmpty ( $~json.error ) and not ~endFound ;
+			~jsonParseNext ( "," )
+			& If ( IsEmpty ( $~json.error ) ;
+				~jsonParseWhitespace
 			)
 		) ;
 		
@@ -137,11 +136,12 @@ Case (
 	 */
 	step = 2 ;
 	Let ( [
+		~result = $~jsonParseArrayGetKeyList.result ;
+		
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayGetKeyList [step:2]"
+				& " [result:" & ~result & "]"
 		) & /* logging end */ "" ;
-		
-		~result = $~jsonParseArrayGetKeyList.result ;
 		
 		/* clean up local variables */
 		$~jsonParseArrayGetKeyList.result = ""
