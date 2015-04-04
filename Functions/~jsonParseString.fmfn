@@ -93,6 +93,7 @@ Case (
 	Let ( [
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseString end [i:" & $~jsonParseString.i & "]"
+				& " [result:" & $~jsonParseString.result & "]"
 		) & /* logging end */ "" ;
 
 		~result = $~jsonParseString.result ;

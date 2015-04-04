@@ -99,6 +99,8 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 			~jsonBefore
 				& ~newValue
 				& ~jsonAfter
+			;
+			"Error: " & $~json.error
 		)
 	) ;
 
@@ -110,7 +112,9 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 		/**
 		 * determine if the json is empty: {} or []
 		 */
-		~isEmpty = ~jsonParseIsEmpty ;
+		~isEmpty = If ( IsEmpty ( $~json.error ) ;
+			~jsonParseIsEmpty
+		) ;
 		
 		/**
 		 * get the position of the last closing bracket
@@ -162,14 +166,18 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 			)
 		)
 	] ;
-		~jsonBefore
-		& If ( not ~isEmpty ; "," )
-		& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
-			/* keyOrIndex is a string, so assume it's meant to be an object key */
-			~jsonEncodeString ( keyOrIndex )
-			& ":"
+		If ( IsEmpty ( $~json.error ) ;
+			~jsonBefore
+				& If ( not ~isEmpty ; "," )
+				& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
+					/* keyOrIndex is a string, so assume it's meant to be an object key */
+					~jsonEncodeString ( keyOrIndex )
+					& ":"
+				)
+				& ~newValue
+				& ~jsonAfter
+			;
+			"Error: " & $~json.error
 		)
-		& ~newValue
-		& ~jsonAfter
 	)
 )
