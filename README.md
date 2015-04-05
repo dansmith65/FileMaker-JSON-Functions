@@ -16,8 +16,8 @@ I'd like to thank [geist interactive](https://www.geistinteractive.com/) for spo
 
 ##STATUS
 
-This project is currently in a very early stage of development, so you should account for he potential for major changes to be made to it. That being said; my goal is to match the functionality of the [BaseElements](http://www.goya.com.au/baseelements/plugin) backed set of custom functions with the same name available at [geistinteractive/JSONCustomFunctions](https://github.com/geistinteractive/JSONCustomFunctions).
+This project is currently in a very early stage of development, so you should account for the potential for major changes to be made to it. That being said; my goal is to match the functionality of the [BaseElements](http://www.goya.com.au/baseelements/plugin) backed set of custom functions with the same name available at [geistinteractive/JSONCustomFunctions](https://github.com/geistinteractive/JSONCustomFunctions).
 
 The current implementation includes 24 private custom functions to support the the 7 public functions. My goal is to combine many of the private functions so there are as few as possible; I think 3-4 is likely, but I'm not certain, yet.
 
-These functions are drastically slower than the BaseElements backed functions, and approximately twice as slow as the JSON module that converts json to Let Notation. My goal is to implement caching to improve the performance of these functions.
+These functions are drastically slower than the BaseElements backed functions and approximately twice as slow as the JSON module that converts json to Let Notation. My goal is to implement caching to improve the performance of these functions.
