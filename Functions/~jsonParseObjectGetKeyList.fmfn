@@ -54,7 +54,7 @@ Case (
 		~endFound = If ( IsEmpty ( $~json.error ) ;
 			If ( $~json.ch = "}" ;
 				True
-					& ~jsonDiscardResult ( ~jsonParseNext ( "]" ) )
+					& ~jsonDiscardResult ( ~jsonParseNext ( "}" ) )
 			)
 		) ;
 		
@@ -114,7 +114,7 @@ Case (
 		~endFound = If ( IsEmpty ( $~json.error ) ;
 			If ( $~json.ch = "}" ;
 				True
-					& ~jsonDiscardResult ( ~jsonParseNext ( "]" ) )
+					& ~jsonDiscardResult ( ~jsonParseNext ( "}" ) )
 			)
 		) ;
 		
@@ -145,7 +145,10 @@ Case (
 	 */
 	step = 2 ;
 	Let ( [
-		~result = $~jsonParseObjectGetKeyList.result ;
+		~result = If ( IsEmpty ( $~json.error ) ;
+			$~jsonParseObjectGetKeyList.result ;
+			"Error: " & $~json.error
+		) ;
 		
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseObjectGetKeyList [step:2]"

@@ -136,7 +136,10 @@ Case (
 	 */
 	step = 2 ;
 	Let ( [
-		~result = $~jsonParseArrayGetKeyList.result ;
+		~result = If ( IsEmpty ( $~json.error ) ;
+			$~jsonParseArrayGetKeyList.result ;
+			"Error: " & $~json.error
+		) ;
 		
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayGetKeyList [step:2]"
