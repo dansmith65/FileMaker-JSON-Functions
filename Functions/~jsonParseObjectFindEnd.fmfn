@@ -56,12 +56,13 @@ Case (
 		/* check if object is empty */
 		~endFound = If ( IsEmpty ( $~json.error ) ;
 			If ( $~json.ch = "}" ;
-				Not IsEmpty ( ~jsonParseNext ( "}" ) )
+				True
+					& ~jsonDiscardResult ( ~jsonParseNext ( "}" ) )
 			)
 		) ;
 		
 		~nextStep = If (
-			Not IsEmpty ( $~json.error )
+			not IsEmpty ( $~json.error )
 				or ~endFound
 			;
 			2 ;	/* clean-up */
@@ -110,22 +111,21 @@ Case (
 		/* check if at end of object */
 		~endFound = If ( IsEmpty ( $~json.error ) ;
 			If ( $~json.ch = "}" ;
-				Not IsEmpty ( ~jsonParseNext ( "}" ) )
+				True
+					& ~jsonDiscardResult ( ~jsonParseNext ( "}" ) )
 			)
 		) ;
 		
 		/* advance pointer to start of next key */
-		~! = If ( IsEmpty ( $~json.error ) ;
-			If ( Not ~endFound ;
-				~jsonParseNext ( "," )
-				& If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
-				)
+		~! = If ( IsEmpty ( $~json.error ) and not ~endFound ;
+			~jsonParseNext ( "," )
+			& If ( IsEmpty ( $~json.error ) ;
+				~jsonParseWhitespace
 			)
 		) ;
 		
 		~nextStep = If (
-			Not IsEmpty ( $~json.error )
+			not IsEmpty ( $~json.error )
 				or ~endFound
 			;
 			2 ;	/* clean-up */
