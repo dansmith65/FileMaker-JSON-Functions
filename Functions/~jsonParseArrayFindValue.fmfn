@@ -30,10 +30,12 @@ Case (
 	Let ( [
 		~! = /* logging start */ LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue start [step:0]"
+				& " [index:" & index & "]"
 		) & /* logging end */ "" ;
 		
 		/* initialize variables */
 		$~jsonParseArrayFindValue.i = -1 ;
+		$~jsonParseArrayFindValue.result = "" ;
 
 		~! = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
 			~jsonParseError ( "Pointer was not at start of an array" )

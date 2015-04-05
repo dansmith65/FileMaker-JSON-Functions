@@ -27,6 +27,9 @@ Let ( [
 			& If ( $~json.at > 0 ;
 				" [ch:" & $~json.ch & "]"
 				& " [at:" & $~json.at & "]"
+				& " [context:"
+					& Middle ( $~json.text ; $~json.at - 11 ; 20 )
+					& "]"
 			)
 		;
 		$~json.error

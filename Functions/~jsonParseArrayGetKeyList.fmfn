@@ -39,8 +39,8 @@ Case (
 		) & /* logging end */ "" ;
 		
 		/* initialize variables */
-		$~jsonParseArrayGetKeyList.result = "" ;
 		$~jsonParseArrayGetKeyList.i = -1 ;
+		$~jsonParseArrayGetKeyList.result = "" ;
 		
 		~! = If ( IsEmpty ( ~jsonParseNext ( "[" ) ) ;
 			~jsonParseError ( "Pointer was not at start of an array" )
