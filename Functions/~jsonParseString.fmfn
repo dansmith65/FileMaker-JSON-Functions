@@ -51,6 +51,11 @@ Case (
 					& ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
 				;
 				
+				/* end of json reached before end of string */
+				~ch = "" and IsEmpty ( $~json.error ) ;
+				~jsonParseError ( "Bad string: reached end of json before end of string" )
+				;
+				
 				/* character is escaped */
 				~ch = "\\" ;
 				~jsonDiscardResult ( ~jsonParseNext ( "" ) )
