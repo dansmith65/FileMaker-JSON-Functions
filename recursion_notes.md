@@ -17,7 +17,7 @@ Recursion limit for custom function:
 Observations
 ------------
 
-<a name="1">Tail recursion allows a maximum depth of 49,999.</a>
+###### Tail recursion allows a maximum depth of 49,999.
 
 ```
 /**
@@ -34,7 +34,7 @@ If ( iteration >= 49999 ;
 ```
 
 
-<a name="2">Saving the result to a variable prevents tail recursion and limits the maximum iterations to 10,000.</a>
+###### Saving the result to a variable prevents tail recursion and limits the maximum iterations to 10,000.
 
 ```
 /**
