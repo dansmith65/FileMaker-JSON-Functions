@@ -30,11 +30,13 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
-	"~jsonFindValue start"
-) & /* logging end */
-
 Let ( [
+	~! = /* logging start */ LogWriterMemoryCreateEntry (
+		"~jsonFindValue start"
+			& " [json:" & json & "]"
+			& " [keyOrIndex:" & keyOrIndex & "]"
+	) & /* logging end */ "" ;
+	
 	/* initialize parsing variables */
 	$~json.ch = " " ;
 	$~json.at = 1 ;

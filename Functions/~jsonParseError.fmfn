@@ -16,11 +16,12 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
-	"~jsonParseError [message:" & message & "]"
-) & /* logging end */
-
 Let ( [
+	~! = /* logging start */ LogWriterMemoryCreateEntry (
+		"~jsonParseError"
+			& " [message:" & message & "]"
+	) & /* logging end */ "" ;
+	
 	/* save the error */
 	$~json.error = List (
 		message

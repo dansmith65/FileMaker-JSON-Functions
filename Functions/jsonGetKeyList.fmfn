@@ -20,10 +20,6 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
-	"jsonGetKeyList start"
-) & /* logging end */
-
 Let ( [
 	/* initialize parsing variables */
 	$~json.ch = " " ;

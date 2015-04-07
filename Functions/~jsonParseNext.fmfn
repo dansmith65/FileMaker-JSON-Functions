@@ -20,10 +20,6 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
-	"~jsonParseNext start [character:" & character & "]"
-) & /* logging end */
-
 If ( Not IsEmpty ( character )
 	and character ≠ $~json.ch ;
 	~jsonDiscardResult ( ~jsonParseError (
@@ -31,6 +27,11 @@ If ( Not IsEmpty ( character )
 	) ) ;
 	
 	Let ( [
+		~! = /* logging start */ LogWriterMemoryCreateEntry (
+			"~jsonParseNext"
+				& " [character:" & character & "]"
+		) & /* logging end */ "" ;
+		
 		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
 		$~json.at = $~json.at + 1
 	] ;
