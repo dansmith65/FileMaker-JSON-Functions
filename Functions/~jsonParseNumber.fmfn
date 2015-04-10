@@ -21,9 +21,9 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
+/* logging start disabled LogWriterMemoryCreateEntry (
 	"~jsonParseNumber start"
-) & /* logging end */
+) & disabled logging end */
 
 GetAsNumber (
 	If ( $~json.ch = "-" ;
@@ -47,6 +47,6 @@ GetAsNumber (
 	& ~jsonParseDigits ( "" )
 )
 
-/* logging start */ & LogWriterMemoryCreateEntry (
+/* logging start disabled & LogWriterMemoryCreateEntry (
 	"~jsonParseNumber end"
-) /* logging end */
+) disabled logging end */

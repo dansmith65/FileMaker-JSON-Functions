@@ -24,10 +24,10 @@ Case (
 	/* Step 0, set-up */
 	not $~jsonParseObjectFindValue.step ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindValue [step:0]"
 				& " [i:" & $~jsonParseObjectFindValue.i & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 
 		~result = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
 			"Error: " & $~json.error  /* TODO: this message does not need to be set here */
@@ -58,10 +58,10 @@ Case (
 	/* Step 1, main */
 	$~jsonParseObjectFindValue.step = 1 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindValue [step:1]"
 				& " [i:" & $~jsonParseObjectFindValue.i & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 
 		~result = If (
 			~jsonParseString = key ;
@@ -111,11 +111,11 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseObjectFindValue.step = 2 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindValue [step:2]"
 				& " [i:" & $~jsonParseObjectFindValue.i & "]"
 				& " [result:" & $~jsonParseObjectFindValue.result & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 
 		~result = If ( IsEmpty ( $~json.error ) ;
 			$~jsonParseObjectFindValue.result ;

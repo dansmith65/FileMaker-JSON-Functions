@@ -35,9 +35,9 @@ Case (
 	 */
 	not step ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectGetKeyList [step:0]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* initialize variable */
 		$~jsonParseObjectGetKeyList.result = "" ;
@@ -77,9 +77,9 @@ Case (
 	 */
 	step = 1 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectGetKeyList [step:1]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		~key = ~jsonParseString ;
 		
@@ -150,10 +150,10 @@ Case (
 			"Error: " & $~json.error
 		) ;
 		
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectGetKeyList [step:2]"
 				& " [result:" & ~result & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* clean up local variables */
 		$~jsonParseObjectGetKeyList.result = ""

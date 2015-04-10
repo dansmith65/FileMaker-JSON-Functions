@@ -20,9 +20,9 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
+/* logging start disabled LogWriterMemoryCreateEntry (
 	"~jsonParseWord start"
-) & /* logging end */
+) & disabled logging end */
 
 Case (
 	$~json.ch = "t" ;

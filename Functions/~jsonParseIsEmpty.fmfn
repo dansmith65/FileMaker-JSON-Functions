@@ -44,9 +44,9 @@ Let ( [
 		$~json.ch = "}" or $~json.ch = "]"
 	) ;
 	
-	~! = /* logging start */ LogWriterMemoryCreateEntry (
+	~! = /* logging start disabled LogWriterMemoryCreateEntry (
 		"~jsonParseIsEmpty: " & If ( ~isEmpty ; "true" ; "false" )
-	) & /* logging end */ "" ;
+	) & disabled logging end */ "" ;
 	
 	~! = ""
 ] ;

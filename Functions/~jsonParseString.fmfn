@@ -28,9 +28,9 @@ Case (
 	/* Step 0, set-up */
 	not $~jsonParseString.step ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseString [step:0]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* currently no setup to do, I'm leaving this structure in case I need it later */
 		$~jsonParseString.step = 1
@@ -42,11 +42,11 @@ Case (
 	/* Step 1, main */
 	$~jsonParseString.step = 1 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseString [step:1]"
 				& " [i:" & $~jsonParseString.i & "]"
 				& " [result:" & $~jsonParseString.result & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 
 		~ch = ~jsonParseNext ( "" ) ;
 		$~jsonParseString.result =
@@ -102,11 +102,11 @@ Case (
 	/* Step 2, clean-up and return result */
 	$~jsonParseString.step = 2 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseString [step:2]"
 				& " [i:" & $~jsonParseString.i & "]"
 				& " [result:" & $~jsonParseString.result & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 
 		~result = $~jsonParseString.result ;
 		// purge variables

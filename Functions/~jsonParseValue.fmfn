@@ -20,9 +20,9 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
+/* logging start disabled LogWriterMemoryCreateEntry (
 	"~jsonParseValue start"
-) & /* logging end */
+) & disabled logging end */
 
 ~jsonParseWhitespace
 & Case (

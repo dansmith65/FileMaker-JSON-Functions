@@ -41,9 +41,9 @@ Case (
 	 */
 	not step ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindEnd [step:0]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		~! = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
 			~jsonParseError ( "Pointer was not at start of an object" )
@@ -80,9 +80,9 @@ Case (
 	 */
 	step = 1 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindEnd [step:1]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;
 			~jsonParseString
@@ -143,9 +143,9 @@ Case (
 	 */
 	step = 2 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindEnd [step:2]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* no local variables to clean up */
 		~! = ""

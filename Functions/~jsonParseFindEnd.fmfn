@@ -29,9 +29,9 @@ Case (
 	 */
 	not step ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseFindEnd [step:0]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* initialize parsing variables */
 		$~json.ch = " " ;
@@ -50,9 +50,9 @@ Case (
 	 */
 	step = 1 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseFindEnd [step:1]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* same as jsonParseNext, but in reverse */
 		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
@@ -80,9 +80,9 @@ Case (
 	 */
 	step = 2 ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseFindEnd [step:2]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* no local variables to clean up */
 		~! = ""

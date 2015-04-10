@@ -28,10 +28,10 @@ Case (
 	 */
 	not $~jsonParseArrayFindValue.step ;
 	Let ( [
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue start [step:0]"
 				& " [index:" & index & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		/* initialize variables */
 		$~jsonParseArrayFindValue.i = -1 ;
@@ -82,11 +82,11 @@ Case (
 	Let ( [
 		$~jsonParseArrayFindValue.i = $~jsonParseArrayFindValue.i + 1 ;
 		
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue start [step:1]"
 				& " [index:" & index & "]"
 				& " [i:" & $~jsonParseArrayFindValue.i & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 		
 		~valueFound = $~jsonParseArrayFindValue.i = index ;
 
@@ -145,11 +145,11 @@ Case (
 			False
 		) ;
 		
-		~! = /* logging start */ LogWriterMemoryCreateEntry (
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseArrayFindValue end [i:" & $~jsonParseArrayFindValue.i & "]"
 				& " [index:" & index & "]"
 				& " [result:" & ~result & "]"
-		) & /* logging end */ "" ;
+		) & disabled logging end */ "" ;
 
 		// purge variables
 		$~jsonParseArrayFindValue.step = "" ;
