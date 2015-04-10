@@ -21,3 +21,7 @@ This project is currently in a very early stage of development, so you should ac
 The current implementation includes 24 private custom functions to support the the 7 public functions. My goal is to combine many of the private functions so there are as few as possible; I think 3-4 is likely, but I'm not certain, yet.
 
 These functions are drastically slower than the BaseElements backed functions and approximately twice as slow as the JSON module that converts json to Let Notation. My goal is to implement caching to improve the performance of these functions.
+
+##INSTALLATION
+
+You can use the CFUpdater.fmp12 file to install or update the functions. That file is still very new and rough, but it works. [Watch this demo](https://youtu.be/vJG2Ee1CItM) to learn how to use it.
