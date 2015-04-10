@@ -21,84 +21,45 @@
  */
 
 Case (
-	/* Step 0, set-up */
+	/**
+	 ***************************************************************************
+	 * STEP 0: SET-UP
+	 ***************************************************************************
+	 */
 	not $~jsonParseObjectFindValue.step ;
 	Let ( [
 		~! = /* logging start disabled LogWriterMemoryCreateEntry (
 			"~jsonParseObjectFindValue [step:0]"
-				& " [i:" & $~jsonParseObjectFindValue.i & "]"
+				& " [key:" & key & "]"
 		) & disabled logging end */ "" ;
-
-		~result = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
-			"Error: " & $~json.error  /* TODO: this message does not need to be set here */
-		) & ~jsonParseWhitespace ;
 		
-		/* check if object is empty */
-		~result = Case (
-			Not IsEmpty ( ~result ) ;
-			~result ;
-			
-			$~json.ch = "}" ;
-			False & ~jsonDiscardResult ( ~jsonParseNext ( "}" ) ) 
+		/* initialize variable */
+		$~jsonParseObjectFindValue.i = 0 ;
+		$~jsonParseObjectFindValue.result = "" ;
+
+		~! = If ( IsEmpty ( ~jsonParseNext ( "{" ) ) ;
+			~jsonParseError ( "Pointer was not at start of an object" )
 		) ;
 		
-		$~jsonParseObjectFindValue.result = ~result ;
-		$~jsonParseObjectFindValue.step = If (
-			Not IsEmpty ( $~json.error )
-				or Not IsEmpty ( $~jsonParseObjectFindValue.result )
-			;
-			2 ;
-			1
-		)
-	] ;
-		~jsonParseObjectFindValue ( key )
-	) ;
-
-	
-	/* Step 1, main */
-	$~jsonParseObjectFindValue.step = 1 ;
-	Let ( [
-		~! = /* logging start disabled LogWriterMemoryCreateEntry (
-			"~jsonParseObjectFindValue [step:1]"
-				& " [i:" & $~jsonParseObjectFindValue.i & "]"
-		) & disabled logging end */ "" ;
-
-		~result = If (
-			~jsonParseString = key ;
-			/* found the value it was looking for! */
-			True
-		) ;
-		/* as long as there was no error, advance pointer to start of value */
 		~! = If ( IsEmpty ( $~json.error ) ;
 			~jsonParseWhitespace
-			& ~jsonParseNext ( ":" )
-			& ~jsonParseWhitespace
-		) ;
-		/* if there was no error, and key did not match, advance pointer to next key */
-		~! = If ( IsEmpty ( $~json.error ) and IsEmpty ( ~result ) ;
-			~jsonParseValueSkip
-			& ~jsonParseWhitespace
-		) ;
-		/* check if at end of object */
-		~result = Case (
-			Not IsEmpty ( ~result ) ;
-			~result ;
-			
-			$~json.ch = "}" ;
-			False & ~jsonDiscardResult ( ~jsonParseNext ( "}" ) ) 
-		) ;
-
-		/* if there was no error, and key did not match, and not at end of object, advance pointer to next key */
-		~! = If ( IsEmpty ( $~json.error ) and IsEmpty ( ~result ) ;
-			~jsonParseNext ( "," )
-			& ~jsonParseWhitespace
 		) ;
 		
-		$~jsonParseObjectFindValue.i = $~jsonParseObjectFindValue.i + 1 ;
-		$~jsonParseObjectFindValue.result = ~result ;
+		/* check if object is empty */
+		~endFound = If ( IsEmpty ( $~json.error ) ;
+			If ( $~json.ch = "}" ;
+				True
+					& ~jsonDiscardResult ( ~jsonParseNext ( "}" ) )
+			)
+		) ;
+		
+		$~jsonParseObjectFindValue.result = Case (
+			~endFound ;
+			False
+		) ;
 		$~jsonParseObjectFindValue.step = If (
-			Not IsEmpty ( $~json.error )
-				or Not IsEmpty ( $~jsonParseObjectFindValue.result )
+			not IsEmpty ( $~json.error )
+				or not IsEmpty ( $~jsonParseObjectFindValue.result )
 			;
 			2 ;
 			1
@@ -108,19 +69,95 @@ Case (
 	) ;
 
 	
-	/* Step 2, clean-up and return result */
+	/**
+	 ***************************************************************************
+	 * STEP 1: MAIN
+	 ***************************************************************************
+	 */
+	$~jsonParseObjectFindValue.step = 1 ;
+	Let ( [
+		$~jsonParseObjectFindValue.i = $~jsonParseObjectFindValue.i + 1 ;
+		
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
+			"~jsonParseObjectFindValue [step:1]"
+				& " [key:" & key & "]"
+				& " [i:" & $~jsonParseObjectFindValue.i & "]"
+		) & disabled logging end */ "" ;
+		
+		~valueFound = ~jsonParseString = key ;
+		
+		~! = If ( IsEmpty ( $~json.error ) ;
+			~jsonParseWhitespace
+		) ;
+		
+		~! = If ( IsEmpty ( $~json.error ) ;
+			~jsonParseNext ( ":" )
+		) ;
+		
+		~! = If ( IsEmpty ( $~json.error ) ;
+			~jsonParseWhitespace
+		) ;
+		
+		~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+			~jsonParseValueSkip
+		) ;
+		
+		~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+			~jsonParseWhitespace
+		) ;
+		
+		/* check if at end of object */
+		~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+			If ( $~json.ch = "}" ;
+				True
+					& ~jsonDiscardResult ( ~jsonParseNext ( "}" ) )
+			)
+		) ;
+		
+		/* advance pointer to start of next key */
+		~! = If ( IsEmpty ( $~json.error ) and not ~endFound and not ~valueFound ;
+			~jsonParseNext ( "," )
+			& If ( IsEmpty ( $~json.error ) ;
+				~jsonParseWhitespace
+			)
+		) ;
+		
+		$~jsonParseObjectFindValue.result = Case (
+			~valueFound ;
+			True ;
+			
+			~endFound ;
+			False
+		) ;
+		$~jsonParseObjectFindValue.step = If (
+			not IsEmpty ( $~json.error )
+				or not IsEmpty ( $~jsonParseObjectFindValue.result )
+			;
+			2 ;	/* clean-up */
+			1	/* main */
+		)
+	] ;
+		~jsonParseObjectFindValue ( key )
+	) ;
+
+	/**
+	 ***************************************************************************
+	 * STEP 2: CLEAN-UP
+	 ***************************************************************************
+	 */
 	$~jsonParseObjectFindValue.step = 2 ;
 	Let ( [
-		~! = /* logging start disabled LogWriterMemoryCreateEntry (
-			"~jsonParseObjectFindValue [step:2]"
-				& " [i:" & $~jsonParseObjectFindValue.i & "]"
-				& " [result:" & $~jsonParseObjectFindValue.result & "]"
-		) & disabled logging end */ "" ;
-
 		~result = If ( IsEmpty ( $~json.error ) ;
 			$~jsonParseObjectFindValue.result ;
 			False
 		) ;
+		
+		~! = /* logging start disabled LogWriterMemoryCreateEntry (
+			"~jsonParseObjectFindValue end [i:" & $~jsonParseObjectFindValue.i & "]"
+				& " [key:" & key & "]"
+				& " [result:" & ~result & "]"
+		) & disabled logging end */ "" ;
+
 		// purge variables
 		$~jsonParseObjectFindValue.i = "" ;
 		$~jsonParseObjectFindValue.step = "" ;
