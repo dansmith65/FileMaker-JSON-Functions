@@ -65,7 +65,7 @@ Case (
 				~ch = "\\" ;
 				~jsonDiscardResult ( ~jsonParseNext ( "" ) )
 					& Case (
-						$~json.ch = "u" ;		$~jsonParseString.result & z_jsonSupport ( "Hex" ; "" ; "" ; "" ; "" ) ;
+						$~json.ch = "u" ;		$~jsonParseString.result & z_jsonSupport ( "ParseHex" ; "" ; "" ; "" ; "" ) ;
 						$~json.ch = "\"" ;		$~jsonParseString.result & "\"" ;
 						$~json.ch = "\\" ;		$~jsonParseString.result & "\\" ;
 						$~json.ch = "/" ;		$~jsonParseString.result & "/" ;

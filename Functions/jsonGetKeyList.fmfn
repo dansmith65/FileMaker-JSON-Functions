@@ -31,7 +31,7 @@ Let ( [
 	& Case (
 		/* object */
 		$~json.ch = "{" ;
-		z_jsonSupport ( "ObjectGetKeyList" ; "" ; "" ; "" ; "" ) ;
+		z_jsonSupport ( "ParseObjectGetKeyList" ; "" ; "" ; "" ; "" ) ;
 		
 		/* array */
 		$~json.ch = "[" ;

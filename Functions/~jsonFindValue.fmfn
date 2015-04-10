@@ -47,7 +47,7 @@ Let ( [
 	& Case (
 		/* object */
 		$~json.ch = "{" ;
-		z_jsonSupport ( "ObjectFindValue" ; keyOrIndex ; "" ; "" ; "" ) ;
+		z_jsonSupport ( "ParseObjectFindValue" ; keyOrIndex ; "" ; "" ; "" ) ;
 		
 		/* array */
 		$~json.ch = "[" ;
