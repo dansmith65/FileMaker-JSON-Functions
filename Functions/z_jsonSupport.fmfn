@@ -9,6 +9,7 @@
  *		function = function to run
  *			Error
  *			ParseHex
+ *			ParseNumber
  *			ParseObjectFindEnd
  *			ParseObjectFindValue
  *			ParseObjectGetKeyList
@@ -42,7 +43,7 @@ Let ( [
 		function = "Error" ;
 		/**
 		 * =====================================================================
-		 * ERROR
+		 * Error
 		 *
 		 * parameters:
 		 *		req = error message
@@ -88,7 +89,7 @@ Let ( [
 		function = "ParseHex" ;
 		/**
 		 * =====================================================================
-		 * PARSEHEX
+		 * ParseHex
 		 * 
 		 * While parsing a string, convert an escaped hex code to a unicode value.
 		 *
@@ -123,6 +124,78 @@ Let ( [
 				Char ( res ) ;		/* return the unicode character */
 				
 				z_jsonSupport ( "ParseHex" ; "" ; private ; res ; step )
+			)
+		) ;
+		
+		
+		
+		function = "ParseNumber" ;
+		/**
+		 * =====================================================================
+		 * ParseNumber
+		 * 
+		 * While parsing a string, convert an escaped hex code to a unicode value.
+		 *
+		 * parameters:
+		 *		req = not used
+		 *		private = not used
+		 *
+		 * returns:
+		 *		Number
+		 * =====================================================================
+		 */
+		Let ( [
+			~string = 
+				If ( $~json.ch = "-" ;
+					"-"
+						/* function:next_no_result */
+						& Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+				)
+
+				& ~jsonParseDigits ( "" )
+
+				& If ( $~json.ch = "." ;
+					"."
+						/* function:next_no_result */
+						& Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+					& ~jsonParseDigits ( "" )
+				)
+
+				& If ( $~json.ch = "e" ;
+					$~json.ch
+						/* function:next_no_result */
+						& Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+						& If ( $~json.ch = "-" or $~json.ch = "+" ;
+							$~json.ch
+								/* function:next_no_result */
+								& Let ( [
+									$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+									$~json.at = $~json.at + 1
+								] ;
+									""
+								)
+						)
+				)
+
+				& ~jsonParseDigits ( "" )
+		] ;
+			If ( IsEmpty ( $~json.error ) ;
+				GetAsNumber ( ~string )
 			)
 		) ;
 		

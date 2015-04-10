@@ -86,7 +86,7 @@
 			and $~json.ch ≤ 9
 		)
 	;
-	~jsonParseNumber ;
+	z_jsonSupport ( "ParseNumber" ; "" ; "" ; "" ; "" ) ;
 	
 	/* else */
 	~jsonParseWord
