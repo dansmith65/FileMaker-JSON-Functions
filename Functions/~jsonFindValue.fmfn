@@ -16,8 +16,8 @@
  *		~jsonDiscardResult
  *		~jsonParseError
  *		~jsonParseWhitespace
- *		~jsonParseObjectFindValue
  *		~jsonParseArrayFindValue
+ *		z_jsonSupport
  *
  * NOTES:
  *		used by jsonGet to return the value
@@ -47,7 +47,7 @@ Let ( [
 	& Case (
 		/* object */
 		$~json.ch = "{" ;
-		~jsonParseObjectFindValue ( keyOrIndex ) ;
+		z_jsonSupport ( "ObjectFindValue" ; keyOrIndex ; "" ; "" ; "" ) ;
 		
 		/* array */
 		$~json.ch = "[" ;

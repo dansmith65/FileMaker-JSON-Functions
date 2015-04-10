@@ -10,7 +10,7 @@
  *		json = the json string
  *
  * DEPENDENCIES:
- *		
+ *		z_jsonSupport
  *
  * NOTES:
  *
@@ -31,7 +31,7 @@ Let ( [
 	& Case (
 		/* object */
 		$~json.ch = "{" ;
-		~jsonParseObjectGetKeyList ( "" ) ;
+		z_jsonSupport ( "ObjectGetKeyList" ; "" ; "" ; "" ; "" ) ;
 		
 		/* array */
 		$~json.ch = "[" ;

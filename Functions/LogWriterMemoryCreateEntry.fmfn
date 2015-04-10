@@ -24,9 +24,19 @@
  */
 
 Let ( [
-	logData = logData
-		& " [ch:" & $~json.ch & "]"
-		& " [at:" & $~json.at & "]"
+	logData = 
+		"[at:" & $~json.at & "]"
+		& " [ch:"
+			/* replace line breaks because they make the log harder to read */
+			& Case (
+				$~json.ch = Char ( 13 ) ;
+				"CR" ;
+				$~json.ch = Char ( 10 ) ;
+				"LF" ;
+				$~json.ch
+			)
+			& "] "
+		& logData
 	;
 	$$LOGWRITER.MEMORY.LAST = $$LOGWRITER.MEMORY.LAST + 1 ;
 	$$LOGWRITER.MEMORY[$$LOGWRITER.MEMORY.LAST] = logData

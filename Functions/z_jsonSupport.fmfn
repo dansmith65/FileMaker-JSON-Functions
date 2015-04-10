@@ -1,0 +1,272 @@
+/**
+ * =====================================
+ * z_jsonSupport ( function ; req ; private ; res ; step )
+ *
+ * PURPOSE:
+ *		Supporting code for native json creation and parsing functions.
+ *
+ * PARAMETERS:
+ *		function = function to run
+ *		req = requested data (if any)
+ *		private = private data, likely sent to recursive calls of a function
+ *		res = response
+ *		step = current state of a recursive function
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Let ( [
+	~! = /* logging start disabled LogWriterMemoryCreateEntry (
+		"z_jsonSupport "
+			& " [function:" & function & "]"
+			& " [step:" & step & "]"
+			& " [req:" & req & "]"
+			& " [private:" & private & "]"
+			& " [res:" & res & "]"
+	) & disabled logging end */ ""
+] ;
+	Case (
+		function = "ObjectFindEnd"
+			or function = "ObjectFindValue"
+			or function = "ObjectGetKeyList"
+		;
+		/**
+		 * =====================================================================
+		 * OBJECT WALKING FUNCTIONS
+		 *
+		 * parameters:
+		 *		req = key to find for ObjectFindValue, not used for others
+		 *		private = not used
+		 * =====================================================================
+		 */
+		Case (
+			/**
+			 ******************************************************
+			 * STEP 0: SET-UP
+			 ******************************************************
+			 */
+			not step ;
+			Let ( [
+				~! = 
+					/* function:next_with_param */
+					If ( $~json.ch ≠ "{" ;
+						z_jsonSupport ( "Error" ;
+							"Pointer was not at start of an object" ; "" ; "" ; ""
+						) ;
+						Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							$~json.ch
+						)
+					)
+				;
+				~! = If ( IsEmpty ( $~json.error ) ;
+					~jsonParseWhitespace
+				) ;
+				/* check if object is empty */
+				~endFound = If ( IsEmpty ( $~json.error ) ;
+					If ( $~json.ch = "}" ;
+						True &
+						/* function:next_no_result */
+						Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+					)
+				) ;
+				res = If ( ~endFound ; False ) ;
+				step = If (
+					not IsEmpty ( $~json.error )
+						or ~endFound
+					;
+					2 ;	/* clean-up */
+					1	/* main */
+				)
+			] ;
+				z_jsonSupport ( function ; req ; private ; res ; step )
+			) ;
+			
+			/**
+			 ******************************************************
+			 * STEP 1: MAIN
+			 ******************************************************
+			 */
+			step = 1 ;
+			Let ( [
+				~key = ~jsonParseString ;
+				~valueFound = If ( function = "ObjectFindValue" ;
+					~key = req
+				) ;
+				~! = If ( IsEmpty ( $~json.error ) ;
+					~jsonParseWhitespace
+				) ;
+				~! = 
+					/* function:next_with_param_no_result */
+					If ( $~json.ch ≠ ":" ;
+						z_jsonSupport ( "Error" ;
+							"Expected : instead of " & $~json.ch ; "" ; "" ; ""
+						) ;
+						Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+					)
+				;
+				~! = If ( IsEmpty ( $~json.error ) ;
+					~jsonParseWhitespace
+				) ;
+				~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+					~jsonParseValueSkip
+				) ;
+				~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+					~jsonParseWhitespace
+				) ;
+				/* check if at end of object */
+				~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+					If ( $~json.ch = "}" ;
+						True &
+						/* function:next_no_result */
+						Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+					)
+				) ;
+				/* advance pointer to start of next key */
+				~! = If ( IsEmpty ( $~json.error )
+						and not ~endFound
+						and not ~valueFound
+					;
+					/* function:next_with_param_no_result */
+					If ( $~json.ch ≠ "," ;
+						z_jsonSupport ( "Error" ;
+							"Expected , instead of " & $~json.ch ; "" ; "" ; ""
+						) ;
+						Let ( [
+							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+							$~json.at = $~json.at + 1
+						] ;
+							""
+						)
+					)
+					& If ( IsEmpty ( $~json.error ) ;
+						~jsonParseWhitespace
+					)
+				) ;
+				res = If ( IsEmpty ( $~json.error ) ;
+					Case (
+						function = "ObjectGetKeyList" ;
+						List ( res ; ~key ) ;
+						
+						function = "ObjectFindValue" ;
+						Case (
+							~valueFound ; 	True ;
+							
+							~endFound ; 	False
+						) ;
+					)
+				) ;
+				~! = /* logging start disabled LogWriterMemoryCreateEntry (
+					"z_jsonSupport"
+						& " [~key:" & ~key & "]"
+						& " [~valueFound:" & ~valueFound & "]"
+						& " [~endFound:" & ~endFound & "]"
+				) & disabled logging end */ "" ;
+				step = If (
+					not IsEmpty ( $~json.error )
+						or ~endFound
+						or ~valueFound
+					;
+					2 ;	/* clean-up */
+					1	/* main */
+				)
+			] ;
+				z_jsonSupport ( function ; req ; private ; res ; step )
+			) ;
+			
+			/**
+			 ******************************************************
+			 * ELSE: CLEAN-UP
+			 ******************************************************
+			 */
+			Let ( [
+				res = If ( IsEmpty ( $~json.error ) ;
+					res ;
+					"Error: " & $~json.error
+				)
+			] ;
+				res
+			)
+		) ;
+		
+		
+		
+		function = "Error" ;
+		/**
+		 * =====================================================================
+		 * ERROR
+		 *
+		 * parameters:
+		 *		req = error message
+		 * =====================================================================
+		 */
+		Let ( [
+			/* *
+			 * am not using a standard logging start/end comment because error
+			 * logging should always be enabled
+			 */
+			message = req ;
+			~! = LogWriterMemoryCreateEntry (
+				"~jsonParseError"
+					& " [message:" & message & "]"
+			) ;
+			/* save the error */
+			$~json.error = List (
+				message
+					& If ( $~json.at > 0 ;
+						" [ch:" & $~json.ch & "]"
+						& " [at:" & $~json.at & "]"
+						& " [context:"
+							& Middle ( $~json.text ; $~json.at - 11 ; 20 )
+							& "]"
+					)
+				;
+				$~json.error
+			) ;
+			/* trigger parent functions to abort */
+			$~json.ch = "" ;
+			$~json.at = -1
+		] ;
+			/**
+			 * Don't return anything because calling function can always access
+			 * the error from $~json.error, and many calling functions don't
+			 * need to access the error.
+			 */
+			""
+		) ;
+		
+		
+		
+		/**
+		 * =====================================================================
+		 * ELSE: FUNCTION NOT FOUND
+		 * =====================================================================
+		 */
+		z_jsonSupport ( "Error" ;
+			"Function [" & function & "]does not exist" ; "" ; "" ; ""
+		)
+	)
+)
