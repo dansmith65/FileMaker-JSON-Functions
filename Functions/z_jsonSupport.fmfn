@@ -7,6 +7,11 @@
  *
  * PARAMETERS:
  *		function = function to run
+ *			Error
+ *			Hex
+ *			ObjectFindEnd
+ *			ObjectFindValue
+ *			ObjectGetKeyList
  *		req = requested data (if any)
  *		private = private data, likely sent to recursive calls of a function
  *		res = response
@@ -32,6 +37,97 @@ Let ( [
 	) & disabled logging end */ ""
 ] ;
 	Case (
+		
+		
+		function = "Error" ;
+		/**
+		 * =====================================================================
+		 * ERROR
+		 *
+		 * parameters:
+		 *		req = error message
+		 * =====================================================================
+		 */
+		Let ( [
+			/* *
+			 * am not using a standard logging start/end comment because error
+			 * logging should always be enabled
+			 */
+			message = req ;
+			~! = LogWriterMemoryCreateEntry (
+				"~jsonParseError"
+					& " [message:" & message & "]"
+			) ;
+			/* save the error */
+			$~json.error = List (
+				message
+					& If ( $~json.at > 0 ;
+						" [ch:" & $~json.ch & "]"
+						& " [at:" & $~json.at & "]"
+						& " [context:"
+							& Middle ( $~json.text ; $~json.at - 11 ; 20 )
+							& "]"
+					)
+				;
+				$~json.error
+			) ;
+			/* trigger parent functions to abort */
+			$~json.ch = "" ;
+			$~json.at = -1
+		] ;
+			/**
+			 * Don't return anything because calling function can always access
+			 * the error from $~json.error, and many calling functions don't
+			 * need to access the error.
+			 */
+			""
+		) ;
+		
+		
+		
+		function = "Hex" ;
+		/**
+		 * =====================================================================
+		 * HEX
+		 * 
+		 * While parsing a string, convert an escaped hex code to a unicode value.
+		 *
+		 * parameters:
+		 *		req = not used
+		 *		private = internal use only; iteration counter
+		 *
+		 * returns:
+		 *		Unicode character.
+		 * =====================================================================
+		 */
+		Let ( [
+			private = private + 1 ;
+			~ch = ~jsonParseNext ( "" ) ;
+			~hex = Position (
+				"0123456789ABCDEF" ;
+				~ch ;
+				1 ;
+				1
+			) - 1 ;
+			res = res * 16 + ~hex
+		] ;
+			Case (
+				not IsEmpty ( $~json.error )	;	/* an error occurred */
+				"" ;
+				
+				IsEmpty ( ~hex )
+					or ~hex < 0
+					or ~hex > 15
+					or private = 4
+				;
+				Char ( res ) ;		/* return the unicode character */
+				
+				z_jsonSupport ( "Hex" ; "" ; private ; res ; step )
+			)
+		) ;
+		
+		
+		
 		function = "ObjectFindEnd"
 			or function = "ObjectFindValue"
 			or function = "ObjectGetKeyList"
@@ -210,52 +306,6 @@ Let ( [
 			] ;
 				res
 			)
-		) ;
-		
-		
-		
-		function = "Error" ;
-		/**
-		 * =====================================================================
-		 * ERROR
-		 *
-		 * parameters:
-		 *		req = error message
-		 * =====================================================================
-		 */
-		Let ( [
-			/* *
-			 * am not using a standard logging start/end comment because error
-			 * logging should always be enabled
-			 */
-			message = req ;
-			~! = LogWriterMemoryCreateEntry (
-				"~jsonParseError"
-					& " [message:" & message & "]"
-			) ;
-			/* save the error */
-			$~json.error = List (
-				message
-					& If ( $~json.at > 0 ;
-						" [ch:" & $~json.ch & "]"
-						& " [at:" & $~json.at & "]"
-						& " [context:"
-							& Middle ( $~json.text ; $~json.at - 11 ; 20 )
-							& "]"
-					)
-				;
-				$~json.error
-			) ;
-			/* trigger parent functions to abort */
-			$~json.ch = "" ;
-			$~json.at = -1
-		] ;
-			/**
-			 * Don't return anything because calling function can always access
-			 * the error from $~json.error, and many calling functions don't
-			 * need to access the error.
-			 */
-			""
 		) ;
 		
 		
