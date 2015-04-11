@@ -8,6 +8,7 @@
  * PARAMETERS:
  *		function = function to run
  *			Error
+ *			ParseDigits
  *			ParseHex
  *			ParseNumber
  *			ParseObjectFindEnd
@@ -27,369 +28,420 @@
  * =====================================
  */
 
+/* logging start disabled
 Let ( [
-	~! = /* logging start disabled LogWriterMemoryCreateEntry (
+	~! = LogWriterMemoryCreateEntry (
 		"z_jsonSupport "
 			& " [function:" & function & "]"
 			& " [step:" & step & "]"
 			& " [req:" & req & "]"
 			& " [private:" & private & "]"
 			& " [res:" & res & "]"
-	) & disabled logging end */ ""
+	)
 ] ;
-	Case (
-		
-		
-		function = "Error" ;
-		/**
-		 * =====================================================================
-		 * Error
-		 *
-		 * parameters:
-		 *		req = error message
-		 * =====================================================================
+disabled logging end */
+Case (
+	
+	
+	function = "Error" ;
+	/**
+	 * =====================================================================
+	 * Error
+	 *
+	 * parameters:
+	 *		req = error message
+	 * =====================================================================
+	 */
+	Let ( [
+		/* *
+		 * am not using a standard logging start/end comment because error
+		 * logging should always be enabled
 		 */
-		Let ( [
-			/* *
-			 * am not using a standard logging start/end comment because error
-			 * logging should always be enabled
-			 */
-			message = req ;
-			~! = LogWriterMemoryCreateEntry (
-				"~jsonParseError"
-					& " [message:" & message & "]"
-			) ;
-			/* save the error */
-			$~json.error = List (
-				message
-					& If ( $~json.at > 0 ;
-						" [ch:" & $~json.ch & "]"
-						& " [at:" & $~json.at & "]"
-						& " [context:"
-							& Middle ( $~json.text ; $~json.at - 11 ; 20 )
-							& "]"
-					)
-				;
-				$~json.error
-			) ;
-			/* trigger parent functions to abort */
-			$~json.ch = "" ;
-			$~json.at = -1
-		] ;
-			/**
-			 * Don't return anything because calling function can always access
-			 * the error from $~json.error, and many calling functions don't
-			 * need to access the error.
-			 */
-			""
+		message = req ;
+		~! = LogWriterMemoryCreateEntry (
+			"~jsonParseError"
+				& " [message:" & message & "]"
 		) ;
-		
-		
-		
-		function = "ParseHex" ;
+		/* save the error */
+		$~json.error = List (
+			message
+				& If ( $~json.at > 0 ;
+					" [ch:" & $~json.ch & "]"
+					& " [at:" & $~json.at & "]"
+					& " [context:"
+						& Middle ( $~json.text ; $~json.at - 11 ; 20 )
+						& "]"
+				)
+			;
+			$~json.error
+		) ;
+		/* trigger parent functions to abort */
+		$~json.ch = "" ;
+		$~json.at = -1
+	] ;
 		/**
-		 * =====================================================================
-		 * ParseHex
-		 * 
-		 * While parsing a string, convert an escaped hex code to a unicode value.
-		 *
-		 * parameters:
-		 *		req = not used
-		 *		private = internal use only; iteration counter
-		 *
-		 * returns:
-		 *		Unicode character.
-		 * =====================================================================
+		 * Don't return anything because calling function can always access
+		 * the error from $~json.error, and many calling functions don't
+		 * need to access the error.
 		 */
+		""
+	) ;
+	
+	
+	
+	function = "ParseDigits" ;
+	/**
+	 * =====================================================================
+	 * ParseDigits
+	 * 
+	 * Extract a stream of digits
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		a stream of digits as text
+	 * =====================================================================
+	 */
+	If ( $~json.ch ≥ "0" and $~json.ch ≤ "9" ;
 		Let ( [
-			private = private + 1 ;
-			~ch = ~jsonParseNext ( "" ) ;
-			~hex = Position (
-				"0123456789ABCDEF" ;
-				~ch ;
-				1 ;
-				1
-			) - 1 ;
-			res = res * 16 + ~hex
+			~chunkSize = 10 ;
+			~chunk = Middle ( $~json.text ; $~json.at - 1 ; ~chunkSize ) ;
+			~noDigits = Substitute ( ~chunk ; [0;""]; [1;""]; [2;""]; [3;""]; [4;""]; [5;""]; [6;""]; [7;""]; [8;""]; [9;""] ) ;
+			~firstNonDigit = Left ( ~noDigits ; 1 )
 		] ;
-			Case (
-				not IsEmpty ( $~json.error )	;	/* an error occurred */
-				"" ;
+			If ( IsEmpty ( ~firstNonDigit ) ;
+				/* this chunk is all digits */
+				Let ( [
+					$~json.at = $~json.at + ~chunkSize
+				] ;
+					z_jsonSupport ( "ParseDigits" ; "" ; "" ; res & ~chunk ; "" )
+				) ;
 				
-				IsEmpty ( ~hex )
-					or ~hex < 0
-					or ~hex > 15
-					or private = 4
-				;
-				Char ( res ) ;		/* return the unicode character */
-				
-				z_jsonSupport ( "ParseHex" ; "" ; private ; res ; step )
+				/* else: move pointer to start of first non digit */
+				Let ( [
+					~pos = Position ( ~chunk ; ~firstNonDigit ; 1 ; 1 ) ;
+					~digits = Middle ( ~chunk ; 1 ; ~pos - 1 ) ;
+					$~json.at = $~json.at + ~pos - 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					res & ~digits
+				)
 			)
 		) ;
-		
-		
-		
-		function = "ParseNumber" ;
-		/**
-		 * =====================================================================
-		 * ParseNumber
-		 * 
-		 * While parsing a string, convert an escaped hex code to a unicode value.
-		 *
-		 * parameters:
-		 *		req = not used
-		 *		private = not used
-		 *
-		 * returns:
-		 *		Number
-		 * =====================================================================
-		 */
-		Let ( [
-			~string = 
-				If ( $~json.ch = "-" ;
-					"-"
-						/* function:next_no_result */
-						& Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-				)
-
-				& ~jsonParseDigits ( "" )
-
-				& If ( $~json.ch = "." ;
-					"."
-						/* function:next_no_result */
-						& Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-					& ~jsonParseDigits ( "" )
-				)
-
-				& If ( $~json.ch = "e" ;
-					$~json.ch
-						/* function:next_no_result */
-						& Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-						& If ( $~json.ch = "-" or $~json.ch = "+" ;
-							$~json.ch
-								/* function:next_no_result */
-								& Let ( [
-									$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-									$~json.at = $~json.at + 1
-								] ;
-									""
-								)
-						)
-				)
-
-				& ~jsonParseDigits ( "" )
-		] ;
-			If ( IsEmpty ( $~json.error ) ;
-				GetAsNumber ( ~string )
-			)
-		) ;
-		
-		
-		
-		function = "ParseObjectFindEnd"
-			or function = "ParseObjectFindValue"
-			or function = "ParseObjectGetKeyList"
-		;
-		/**
-		 * =====================================================================
-		 * OBJECT WALKING FUNCTIONS
-		 *
-		 * parameters:
-		 *		req = key to find for ParseObjectFindValue, not used for others
-		 *		private = not used
-		 * =====================================================================
-		 */
+		res
+	) ;
+	
+	
+	
+	function = "ParseHex" ;
+	/**
+	 * =====================================================================
+	 * ParseHex
+	 * 
+	 * While parsing a string, convert an escaped hex code to a unicode value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = internal use only; iteration counter
+	 *
+	 * returns:
+	 *		Unicode character.
+	 * =====================================================================
+	 */
+	Let ( [
+		private = private + 1 ;
+		~ch = ~jsonParseNext ( "" ) ;
+		~hex = Position (
+			"0123456789ABCDEF" ;
+			~ch ;
+			1 ;
+			1
+		) - 1 ;
+		res = res * 16 + ~hex
+	] ;
 		Case (
-			/**
-			 ******************************************************
-			 * STEP 0: SET-UP
-			 ******************************************************
-			 */
-			not step ;
-			Let ( [
-				~! = 
-					/* function:next_with_param */
-					If ( $~json.ch ≠ "{" ;
-						z_jsonSupport ( "Error" ;
-							"Pointer was not at start of an object" ; "" ; "" ; ""
-						) ;
-						Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							$~json.ch
-						)
-					)
-				;
-				~! = If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
-				) ;
-				/* check if object is empty */
-				~endFound = If ( IsEmpty ( $~json.error ) ;
-					If ( $~json.ch = "}" ;
-						True &
-						/* function:next_no_result */
-						Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-					)
-				) ;
-				res = If ( ~endFound ; False ) ;
-				step = If (
-					not IsEmpty ( $~json.error )
-						or ~endFound
-					;
-					2 ;	/* clean-up */
-					1	/* main */
-				)
-			] ;
-				z_jsonSupport ( function ; req ; private ; res ; step )
-			) ;
+			not IsEmpty ( $~json.error )	;	/* an error occurred */
+			"" ;
 			
-			/**
-			 ******************************************************
-			 * STEP 1: MAIN
-			 ******************************************************
-			 */
-			step = 1 ;
-			Let ( [
-				~key = ~jsonParseString ;
-				~valueFound = If ( function = "ParseObjectFindValue" ;
-					~key = req
-				) ;
-				~! = If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
-				) ;
-				~! = 
-					/* function:next_with_param_no_result */
-					If ( $~json.ch ≠ ":" ;
-						z_jsonSupport ( "Error" ;
-							"Expected : instead of " & $~json.ch ; "" ; "" ; ""
-						) ;
-						Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-					)
-				;
-				~! = If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
-				) ;
-				~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-					~jsonParseValueSkip
-				) ;
-				~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-					~jsonParseWhitespace
-				) ;
-				/* check if at end of object */
-				~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-					If ( $~json.ch = "}" ;
-						True &
-						/* function:next_no_result */
-						Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-					)
-				) ;
-				/* advance pointer to start of next key */
-				~! = If ( IsEmpty ( $~json.error )
-						and not ~endFound
-						and not ~valueFound
-					;
-					/* function:next_with_param_no_result */
-					If ( $~json.ch ≠ "," ;
-						z_jsonSupport ( "Error" ;
-							"Expected , instead of " & $~json.ch ; "" ; "" ; ""
-						) ;
-						Let ( [
-							$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-							$~json.at = $~json.at + 1
-						] ;
-							""
-						)
-					)
-					& If ( IsEmpty ( $~json.error ) ;
-						~jsonParseWhitespace
-					)
-				) ;
-				res = If ( IsEmpty ( $~json.error ) ;
-					Case (
-						function = "ParseObjectGetKeyList" ;
-						List ( res ; ~key ) ;
-						
-						function = "ParseObjectFindValue" ;
-						Case (
-							~valueFound ; 	True ;
-							
-							~endFound ; 	False
-						) ;
-					)
-				) ;
-				~! = /* logging start disabled LogWriterMemoryCreateEntry (
-					"z_jsonSupport"
-						& " [~key:" & ~key & "]"
-						& " [~valueFound:" & ~valueFound & "]"
-						& " [~endFound:" & ~endFound & "]"
-				) & disabled logging end */ "" ;
-				step = If (
-					not IsEmpty ( $~json.error )
-						or ~endFound
-						or ~valueFound
-					;
-					2 ;	/* clean-up */
-					1	/* main */
-				)
-			] ;
-				z_jsonSupport ( function ; req ; private ; res ; step )
-			) ;
+			IsEmpty ( ~hex )
+				or ~hex < 0
+				or ~hex > 15
+				or private = 4
+			;
+			Char ( res ) ;		/* return the unicode character */
 			
-			/**
-			 ******************************************************
-			 * ELSE: CLEAN-UP
-			 ******************************************************
-			 */
-			Let ( [
-				res = If ( IsEmpty ( $~json.error ) ;
-					res ;
-					"Error: " & $~json.error
-				)
-			] ;
-				res
+			z_jsonSupport ( "ParseHex" ; "" ; private ; res ; step )
+		)
+	) ;
+	
+	
+	
+	function = "ParseNumber" ;
+	/**
+	 * =====================================================================
+	 * ParseNumber
+	 * 
+	 * While parsing a string, convert an escaped hex code to a unicode value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Number
+	 * =====================================================================
+	 */
+	Let ( [
+		~string = 
+			If ( $~json.ch = "-" ;
+				"-"
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
 			)
+
+			& z_jsonSupport ( "ParseDigits" ; "" ; "" ; "" ; "" )
+
+			& If ( $~json.ch = "." ;
+				"."
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				& z_jsonSupport ( "ParseDigits" ; "" ; "" ; "" ; "" )
+			)
+
+			& If ( $~json.ch = "e" ;
+				$~json.ch
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+					& If ( $~json.ch = "-" or $~json.ch = "+" ;
+						$~json.ch
+							/* function:next_no_result */
+							& Let ( [
+								$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+								$~json.at = $~json.at + 1
+							] ;
+								""
+							)
+					)
+			)
+
+			& z_jsonSupport ( "ParseDigits" ; "" ; "" ; "" ; "" )
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			GetAsNumber ( ~string )
+		)
+	) ;
+	
+	
+	
+	function = "ParseObjectFindEnd"
+		or function = "ParseObjectFindValue"
+		or function = "ParseObjectGetKeyList"
+	;
+	/**
+	 * =====================================================================
+	 * OBJECT WALKING FUNCTIONS
+	 *
+	 * parameters:
+	 *		req = key to find for ParseObjectFindValue, not used for others
+	 *		private = not used
+	 * =====================================================================
+	 */
+	Case (
+		/**
+		 ******************************************************
+		 * STEP 0: SET-UP
+		 ******************************************************
+		 */
+		not step ;
+		Let ( [
+			~! = 
+				/* function:next_with_param */
+				If ( $~json.ch ≠ "{" ;
+					z_jsonSupport ( "Error" ;
+						"Pointer was not at start of an object" ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						$~json.ch
+					)
+				)
+			;
+			~! = If ( IsEmpty ( $~json.error ) ;
+				~jsonParseWhitespace
+			) ;
+			/* check if object is empty */
+			~endFound = If ( IsEmpty ( $~json.error ) ;
+				If ( $~json.ch = "}" ;
+					True &
+					/* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			) ;
+			res = If ( ~endFound ; False ) ;
+			step = If (
+				not IsEmpty ( $~json.error )
+					or ~endFound
+				;
+				2 ;	/* clean-up */
+				1	/* main */
+			)
+		] ;
+			z_jsonSupport ( function ; req ; private ; res ; step )
 		) ;
 		
-		
+		/**
+		 ******************************************************
+		 * STEP 1: MAIN
+		 ******************************************************
+		 */
+		step = 1 ;
+		Let ( [
+			~key = ~jsonParseString ;
+			~valueFound = If ( function = "ParseObjectFindValue" ;
+				~key = req
+			) ;
+			~! = If ( IsEmpty ( $~json.error ) ;
+				~jsonParseWhitespace
+			) ;
+			~! = 
+				/* function:next_with_param_no_result */
+				If ( $~json.ch ≠ ":" ;
+					z_jsonSupport ( "Error" ;
+						"Expected : instead of " & $~json.ch ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			;
+			~! = If ( IsEmpty ( $~json.error ) ;
+				~jsonParseWhitespace
+			) ;
+			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				~jsonParseValueSkip
+			) ;
+			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				~jsonParseWhitespace
+			) ;
+			/* check if at end of object */
+			~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				If ( $~json.ch = "}" ;
+					True &
+					/* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			) ;
+			/* advance pointer to start of next key */
+			~! = If ( IsEmpty ( $~json.error )
+					and not ~endFound
+					and not ~valueFound
+				;
+				/* function:next_with_param_no_result */
+				If ( $~json.ch ≠ "," ;
+					z_jsonSupport ( "Error" ;
+						"Expected , instead of " & $~json.ch ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+				& If ( IsEmpty ( $~json.error ) ;
+					~jsonParseWhitespace
+				)
+			) ;
+			res = If ( IsEmpty ( $~json.error ) ;
+				Case (
+					function = "ParseObjectGetKeyList" ;
+					List ( res ; ~key ) ;
+					
+					function = "ParseObjectFindValue" ;
+					Case (
+						~valueFound ; 	True ;
+						
+						~endFound ; 	False
+					) ;
+				)
+			) ;
+			~! = /* logging start disabled LogWriterMemoryCreateEntry (
+				"z_jsonSupport"
+					& " [~key:" & ~key & "]"
+					& " [~valueFound:" & ~valueFound & "]"
+					& " [~endFound:" & ~endFound & "]"
+			) & disabled logging end */ "" ;
+			step = If (
+				not IsEmpty ( $~json.error )
+					or ~endFound
+					or ~valueFound
+				;
+				2 ;	/* clean-up */
+				1	/* main */
+			)
+		] ;
+			z_jsonSupport ( function ; req ; private ; res ; step )
+		) ;
 		
 		/**
-		 * =====================================================================
-		 * ELSE: FUNCTION NOT FOUND
-		 * =====================================================================
+		 ******************************************************
+		 * ELSE: CLEAN-UP
+		 ******************************************************
 		 */
-		z_jsonSupport ( "Error" ;
-			"Function [" & function & "]does not exist" ; "" ; "" ; ""
+		Let ( [
+			res = If ( IsEmpty ( $~json.error ) ;
+				res ;
+				"Error: " & $~json.error
+			)
+		] ;
+			res
 		)
+	) ;
+	
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonSupport ( "Error" ;
+		"Function [" & function & "]does not exist" ; "" ; "" ; ""
 	)
 )
+
+/* logging start disabled
+)
+disabled logging end */
