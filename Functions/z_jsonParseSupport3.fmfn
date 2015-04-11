@@ -1,0 +1,219 @@
+/**
+ * =====================================
+ * z_jsonParseSupport3 ( functionId ; req ; private ; res ; step )
+ *
+ * PURPOSE:
+ *		Supporting code for native json parsing functions.
+ *		low-level/specific value parsing
+ *
+ * PARAMETERS:
+ *		functionId = numeric code for function to run, in range of 300 - 399
+ *			300		ParseWhitespace
+ *			310		ParseString
+ *			311		ParseHex
+ *			320		ParseNumber
+ *			321		ParseDigits
+ *			330		ParseWord
+ *		req = requested data (if any)
+ *		private = private data, likely sent to recursive calls of a function
+ *		res = response
+ *		step = current state of a recursive function
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/* logging start disabled
+Let ( [
+	~! = LogWriterMemoryCreateEntry (
+		"z_jsonParseSupport3 "
+			& " [functionId:" & functionId & "]"
+			& " [step:" & step & "]"
+			& " [req:" & req & "]"
+			& " [private:" & private & "]"
+			& " [res:" & res & "]"
+	)
+] ;
+disabled logging end */
+Case (
+	
+	
+	functionId = 311 ;
+	/**
+	 * =====================================================================
+	 * ParseHex
+	 * 
+	 * While parsing a string, convert an escaped hex code to a unicode value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = internal use only; iteration counter
+	 *
+	 * returns:
+	 *		Unicode character.
+	 * =====================================================================
+	 */
+	Let ( [
+		private = private + 1 ;
+		~ch = ~jsonParseNext ( "" ) ;
+		~hex = Position (
+			"0123456789ABCDEF" ;
+			~ch ;
+			1 ;
+			1
+		) - 1 ;
+		res = res * 16 + ~hex
+	] ;
+		Case (
+			not IsEmpty ( $~json.error )	;	/* an error occurred */
+			"" ;
+			
+			IsEmpty ( ~hex )
+				or ~hex < 0
+				or ~hex > 15
+				or private = 4
+			;
+			Char ( res ) ;		/* return the unicode character */
+			
+			z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; private ; res ; step )
+		)
+	) ;
+	
+	
+	
+	functionId = 320 ;
+	/**
+	 * =====================================================================
+	 * ParseNumber
+	 * 
+	 * While parsing a string, convert an escaped hex code to a unicode value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Number
+	 * =====================================================================
+	 */
+	Let ( [
+		~string = 
+			If ( $~json.ch = "-" ;
+				"-"
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+			)
+
+			& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
+
+			& If ( $~json.ch = "." ;
+				"."
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
+			)
+
+			& If ( $~json.ch = "e" ;
+				$~json.ch
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+					& If ( $~json.ch = "-" or $~json.ch = "+" ;
+						$~json.ch
+							/* function:next_no_result */
+							& Let ( [
+								$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+								$~json.at = $~json.at + 1
+							] ;
+								""
+							)
+					)
+			)
+
+			& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			GetAsNumber ( ~string )
+		)
+	) ;
+	
+	
+	
+	functionId = 321 ;
+	/**
+	 * =====================================================================
+	 * ParseDigits
+	 * 
+	 * Extract a stream of digits
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		a stream of digits as text
+	 * =====================================================================
+	 */
+	If ( $~json.ch ≥ "0" and $~json.ch ≤ "9" ;
+		Let ( [
+			~chunkSize = 10 ;
+			~chunk = Middle ( $~json.text ; $~json.at - 1 ; ~chunkSize ) ;
+			~noDigits = Substitute ( ~chunk ; [0;""]; [1;""]; [2;""]; [3;""]; [4;""]; [5;""]; [6;""]; [7;""]; [8;""]; [9;""] ) ;
+			~firstNonDigit = Left ( ~noDigits ; 1 )
+		] ;
+			If ( IsEmpty ( ~firstNonDigit ) ;
+				/* this chunk is all digits */
+				Let ( [
+					$~json.at = $~json.at + ~chunkSize
+				] ;
+					z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; res & ~chunk ; "" )
+				) ;
+				
+				/* else: move pointer to start of first non digit */
+				Let ( [
+					~pos = Position ( ~chunk ; ~firstNonDigit ; 1 ; 1 ) ;
+					~digits = Middle ( ~chunk ; 1 ; ~pos - 1 ) ;
+					$~json.at = $~json.at + ~pos - 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					res & ~digits
+				)
+			)
+		) ;
+		res
+	) ;
+	
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"FunctionId [" & functionId & "]does not exist" ; "" ; "" ; ""
+	)
+)
+
+/* logging start disabled
+)
+disabled logging end */

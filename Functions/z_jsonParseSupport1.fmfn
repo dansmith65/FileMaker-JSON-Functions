@@ -1,0 +1,97 @@
+/**
+ * =====================================
+ * z_jsonParseSupport1 ( functionId ; req ; private ; res ; step )
+ *
+ * PURPOSE:
+ *		Supporting code for native json parsing functions.
+ *		high-level/supporting/control/dispatch
+ *
+ * PARAMETERS:
+ *		functionId = numeric code for function to run, in range of 100 - 199
+ *			199		Error
+ *		req = requested data (if any)
+ *		private = private data, likely sent to recursive calls of a function
+ *		res = response
+ *		step = current state of a recursive function
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/* logging start disabled
+Let ( [
+	~! = LogWriterMemoryCreateEntry (
+		"z_jsonParseSupport1 "
+			& " [functionId:" & functionId & "]"
+			& " [step:" & step & "]"
+			& " [req:" & req & "]"
+			& " [private:" & private & "]"
+			& " [res:" & res & "]"
+	)
+] ;
+disabled logging end */
+Case (
+	
+	functionId = 199 ;
+	/**
+	 * =====================================================================
+	 * Error
+	 *
+	 * parameters:
+	 *		req = error message
+	 * =====================================================================
+	 */
+	Let ( [
+		/* *
+		 * am not using a standard logging start/end comment because error
+		 * logging should always be enabled
+		 */
+		message = req ;
+		~! = LogWriterMemoryCreateEntry (
+			"~jsonParseError"
+				& " [message:" & message & "]"
+		) ;
+		/* save the error */
+		$~json.error = List (
+			message
+				& If ( $~json.at > 0 ;
+					" [ch:" & $~json.ch & "]"
+					& " [at:" & $~json.at & "]"
+					& " [context:"
+						& Middle ( $~json.text ; $~json.at - 11 ; 20 )
+						& "]"
+				)
+			;
+			$~json.error
+		) ;
+		/* trigger parent functions to abort */
+		$~json.ch = "" ;
+		$~json.at = -1
+	] ;
+		/**
+		 * Don't return anything because calling function can always access
+		 * the error from $~json.error, and many calling functions don't
+		 * need to access the error.
+		 */
+		""
+	) ;
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"FunctionId [" & functionId & "]does not exist" ; "" ; "" ; ""
+	)
+)
+
+/* logging start disabled
+)
+disabled logging end */

@@ -13,7 +13,8 @@
  *
  * DEPENDENCIES:
  *		Pointer is expected to be at the start of the value (or whitespace before it)
- *		z_jsonSupport
+ *		z_jsonParseSupport2
+ *		z_jsonParseSupport3
  *
  * HISTORY:
  *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
@@ -36,7 +37,7 @@
 		 * value starting with the opening bracket.
 		 */
 		~start = $~json.at - 1 ;
-		~! = z_jsonSupport ( "ParseObjectFindEnd" ; "" ; "" ; "" ; "" ) ;
+		~! = z_jsonParseSupport2 ( 220 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
 		~end =  $~json.at ;
 		~object = If ( IsEmpty ( $~json.error ) ;
 			Middle (
@@ -86,7 +87,7 @@
 			and $~json.ch ≤ 9
 		)
 	;
-	z_jsonSupport ( "ParseNumber" ; "" ; "" ; "" ; "" ) ;
+	z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
 	
 	/* else */
 	~jsonParseWord
