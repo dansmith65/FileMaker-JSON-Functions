@@ -2,13 +2,37 @@
 	extract a stream of digits
 	
 	TODO: documentation
+	
+	Grab a chunk of text, remove digits, find the first non-digit, get that characters position, extract the stream of digits.
+	This method should prevent unnecessary recursion.
+	Can increase the ~chunkSize value if often working with digit streams longer than it's stetting. In that scenario, increasing the value would prevent additional recursion.
 */
 
 If ( $~json.ch ≥ "0" and $~json.ch ≤ "9" ;
-	~jsonParseDigits (
-		string
-		& $~json.ch
-		& ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+	Let ( [
+		~chunkSize = 10 ;
+		~chunk = Middle ( $~json.text ; $~json.at - 1 ; ~chunkSize ) ;
+		~noDigits = Substitute ( ~chunk ; [0;""]; [1;""]; [2;""]; [3;""]; [4;""]; [5;""]; [6;""]; [7;""]; [8;""]; [9;""] ) ;
+		~firstNonDigit = Left ( ~noDigits ; 1 )
+	] ;
+		If ( IsEmpty ( ~firstNonDigit ) ;
+			/* this chunk is all digits */
+			Let ( [
+				$~json.at = $~json.at + ~chunkSize
+			] ;
+				~jsonParseDigits ( string & ~chunk )
+			) ;
+			
+			/* else: move pointer to start of first non digit */
+			Let ( [
+				~pos = Position ( ~chunk ; ~firstNonDigit ; 1 ; 1 ) ;
+				~digits = Middle ( ~chunk ; 1 ; ~pos - 1 ) ;
+				$~json.at = $~json.at + ~pos - 1 ;
+				$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+			] ;
+				string & ~digits
+			)
+		)
 	) ;
 	string
 )
