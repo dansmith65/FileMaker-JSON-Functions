@@ -109,7 +109,7 @@ Case (
 		 */
 		step = 1 ;
 		Let ( [
-			~key = ~jsonParseString ;
+			~key = z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
 			~valueFound = If ( functionId = 221 /* ParseObjectFindValue */ ;
 				~key = req
 			) ;

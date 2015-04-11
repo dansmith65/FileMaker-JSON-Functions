@@ -79,7 +79,7 @@
 	) ;
 	
 	$~json.ch = "\"" ;
-	~jsonParseString ;
+	z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
 	
 	$~json.ch = "-"
 		or (

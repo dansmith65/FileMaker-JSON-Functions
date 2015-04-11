@@ -43,6 +43,80 @@ disabled logging end */
 Case (
 	
 	
+	functionId = 310 ;
+	/**
+	 * =====================================================================
+	 * ParseString
+	 * 
+	 * Extract an decode a json string.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		FileMaker text (the original value before it was encoded as json).
+	 * =====================================================================
+	 */
+	Let ( [
+		~ch = ~jsonParseNext ( "" ) ;
+		res =
+			Case (
+				/* end of string */
+				~ch = "\"" ;
+				res
+					& ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+				;
+				
+				/* end of json reached before end of string */
+				~ch = "" and IsEmpty ( $~json.error ) ;
+				~jsonParseError ( "Bad string: reached end of json before end of string" )
+				;
+				
+				/* character is escaped */
+				~ch = "\\" ;
+				~jsonDiscardResult ( ~jsonParseNext ( "" ) )
+					& Case (
+						$~json.ch = "u" ;
+							res
+							& z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; "" ; "" ; "" ) ;
+						$~json.ch = "\"" ;		res & "\"" ;
+						$~json.ch = "\\" ;		res & "\\" ;
+						$~json.ch = "/" ;		res & "/" ;
+						$~json.ch = "b" ;		res & Char ( 8 ) ;
+						$~json.ch = "f" ;		res & Char ( 12 ) ;
+						$~json.ch = "n" ;		res & Char ( 10 ) ;
+						$~json.ch = "r" ;		res & Char ( 13 ) ;
+						$~json.ch = "t" ;		res & Char ( 9 ) ;
+						/* else */
+						~jsonParseError ( "Bad string: invalid value after backslash escape" )
+					)
+				;
+				
+				/* else */
+				res & ~ch
+			)
+		/* logging start disabled
+		; ~! = LogWriterMemoryCreateEntry (
+			"z_jsonParseSupport3 ParseString "
+				& " [res:" & res & "]"
+		) disabled logging end */
+	] ;
+		Case (
+			Not IsEmpty ( $~json.error ) ;		/* an error occurred */
+			"Error: " & $~json.error ;
+			
+			IsEmpty ( $~json.ch )				/* no more data left */
+				or ~ch = "\""					/* end of string */
+			;
+			res ;
+			
+			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; res ; "" )
+		)
+	) ;
+	
+	
+	
 	functionId = 311 ;
 	/**
 	 * =====================================================================
