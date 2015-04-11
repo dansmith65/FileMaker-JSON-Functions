@@ -52,68 +52,111 @@ Case (
 	 *
 	 * parameters:
 	 *		req = not used
-	 *		private = not used
+	 *		private = iteration counter (for debugging)
 	 *
 	 * returns:
 	 *		FileMaker text (the original value before it was encoded as json).
 	 * =====================================================================
 	 */
 	Let ( [
-		~ch = ~jsonParseNext ( "" ) ;
-		res =
-			Case (
-				/* end of string */
-				~ch = "\"" ;
-				res
-					& ~jsonDiscardResult ( ~jsonParseNext ( "" ) )
-				;
-				
-				/* end of json reached before end of string */
-				~ch = "" and IsEmpty ( $~json.error ) ;
-				~jsonParseError ( "Bad string: reached end of json before end of string" )
-				;
-				
-				/* character is escaped */
-				~ch = "\\" ;
-				~jsonDiscardResult ( ~jsonParseNext ( "" ) )
-					& Case (
-						$~json.ch = "u" ;
-							res
-							& z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; "" ; "" ; "" ) ;
-						$~json.ch = "\"" ;		res & "\"" ;
-						$~json.ch = "\\" ;		res & "\\" ;
-						$~json.ch = "/" ;		res & "/" ;
-						$~json.ch = "b" ;		res & Char ( 8 ) ;
-						$~json.ch = "f" ;		res & Char ( 12 ) ;
-						$~json.ch = "n" ;		res & Char ( 10 ) ;
-						$~json.ch = "r" ;		res & Char ( 13 ) ;
-						$~json.ch = "t" ;		res & Char ( 9 ) ;
-						/* else */
-						~jsonParseError ( "Bad string: invalid value after backslash escape" )
-					)
-				;
-				
-				/* else */
-				res & ~ch
-			)
-		/* logging start disabled
-		; ~! = LogWriterMemoryCreateEntry (
-			"z_jsonParseSupport3 ParseString "
-				& " [res:" & res & "]"
-		) disabled logging end */
+		private = private + 1 ;
+		~end = Position (
+			$~json.text ;
+			"\"" ;
+			$~json.at ; 	/* start */
+			1 				/* occurrence */
+		) ;
+		~escapePos = Position (
+			$~json.text ;
+			"\\" ;
+			$~json.at ; 	/* start */
+			1 				/* occurrence */
+		)
 	] ;
 		Case (
-			Not IsEmpty ( $~json.error ) ;		/* an error occurred */
-			"Error: " & $~json.error ;
+			~end = 0 ;
+			z_jsonParseSupport1 ( 199 /* Error */ ;
+				"Bad string: reached end of json before end of string" ; "" ; "" ; ""
+			) & "Error: " & $~json.error ;
 			
-			IsEmpty ( $~json.ch )				/* no more data left */
-				or ~ch = "\""					/* end of string */
-			;
-			res ;
+			~escapePos > 0 and ~escapePos < ~end ;
+			/* the escape character was found */
+			Let ( [
+				/* logging start disabled
+				~! = LogWriterMemoryCreateEntry (
+					"z_jsonParseSupport3 ParseString escape found"
+						& " [private:" & private & "]"
+						& " [res:" & res & "]"
+						& " [~end:" & ~end & "]"
+						& " [~escapePos:" & ~escapePos & "]"
+				) ; disabled logging end */
+				/* extract data from pointer to escape character */
+				~string = Middle (
+					$~json.text ;
+					$~json.at ;
+					~escapePos - $~json.at
+				) ;
+				/* update pointer */
+				$~json.at = ~escapePos + 1 ;
+				~! = ~jsonParseNext ( "" ) ;
+				/* unescape the character */
+				~ch = Case (
+					$~json.ch = "u" ; 		z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; "" ; "" ; "" ) ;
+					$~json.ch = "\"" ;		"\"" ;
+					$~json.ch = "\\" ;		"\\" ;
+					$~json.ch = "/" ;		"/" ;
+					$~json.ch = "b" ;		Char ( 8 ) ;
+					$~json.ch = "f" ;		Char ( 12 ) ;
+					$~json.ch = "n" ;		Char ( 10 ) ;
+					$~json.ch = "r" ;		Char ( 13 ) ;
+					$~json.ch = "t" ;		Char ( 9 ) ;
+					/* else */
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Bad string: invalid value after backslash escape" ; "" ; "" ; ""
+					)
+				)
+				/* logging start disabled
+				; ~! = LogWriterMemoryCreateEntry (
+					"z_jsonParseSupport3 ParseString"
+						& " [private:" & private & "]"
+						& " [~string:" & ~string & "]"
+						& " [~ch:" & ~ch & "]"
+						& " [res:" & res & ~string & ~ch & "]"
+						& " [~end:" & ~end & "]"
+						& " [~escapePos:" & ~escapePos & "]"
+				) disabled logging end */
+			] ;
+				z_jsonParseSupport3 ( 310 /* ParseString */ ;
+					"" ;
+					private ;
+					res & ~string & ~ch ;
+					""
+				)
+			) ;
 			
-			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; res ; "" )
+			/* else: end recursion */
+			Let ( [
+				~string = Middle ( $~json.text ; $~json.at ; ~end - $~json.at ) ;
+				/* update pointer */
+				$~json.at = ~end + 2 ;
+				$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				/* logging start disabled
+				; ~! = LogWriterMemoryCreateEntry (
+					"z_jsonParseSupport3 ParseString end"
+						& " [private:" & private & "]"
+						& " [res:" & res & ~string & "]"
+						& " [~end:" & ~end & "]"
+						& " [~escapePos:" & ~escapePos & "]"
+				) disabled logging end */
+			] ;
+				If ( Not IsEmpty ( $~json.error ) ;		/* an error occurred */
+					"Error: " & $~json.error ;
+					res & ~string
+				)
+			)
 		)
 	) ;
+	
 	
 	
 	
