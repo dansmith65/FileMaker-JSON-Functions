@@ -90,5 +90,5 @@
 	z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
 	
 	/* else */
-	~jsonParseWord
+	z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
 )

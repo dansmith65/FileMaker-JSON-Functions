@@ -204,6 +204,58 @@ Case (
 	
 	
 	
+	functionId = 330 ;
+	/**
+	 * =====================================================================
+	 * ParseWord
+	 * 
+	 * Extract a stream of digits
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		a stream of digits as text
+	 * =====================================================================
+	 */
+	If ( $~json.ch ≠ "t" and $~json.ch ≠ "f" and $~json.ch ≠ "n" ;
+		z_jsonParseSupport1 ( 199 /* Error */ ;
+			"Unexpected " & Quote ( $~json.ch ) & " at start of ParseWord" ; "" ; "" ; ""
+		)
+		& "Error: " & $~json.error ;
+		
+		Let ( [
+			~len =  Case (
+				$~json.ch = "t" ;		4 ;
+				$~json.ch = "f" ;		5 ;
+				$~json.ch = "n" ;		4
+			) ;
+			~word = Middle ( $~json.text ; $~json.at - 1 ; ~len ) ;
+			res = Case (
+				~word = "true" ;		True ;
+				~word = "false" ;		False ;
+				~word = "null" ;		"json:null"
+			)
+		] ;
+			If ( IsEmpty ( res ) ;
+				z_jsonParseSupport1 ( 199 /* Error */ ;
+					"Invalid word " & Quote ( ~word ) ; "" ; "" ; ""
+				)
+				& "Error: " & $~json.error ;
+				
+				/* else: update pointer, return word */
+				Let ( [
+					$~json.at = $~json.at + ~len ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					res
+				)
+			)
+		)
+	) ;
+	
+	
 	/**
 	 * =====================================================================
 	 * ELSE: FUNCTION NOT FOUND
