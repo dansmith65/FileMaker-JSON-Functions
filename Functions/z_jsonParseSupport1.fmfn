@@ -273,7 +273,7 @@ Case (
 		 */
 		message = req ;
 		~! = LogWriterMemoryCreateEntry (
-			"jsonParseError"
+			"Error"
 				& " [message:" & message & "]"
 		) ;
 		/* save the error */

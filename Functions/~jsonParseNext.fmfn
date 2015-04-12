@@ -11,8 +11,7 @@
  *
  * DEPENDENCIES:
  *		Custom Functions:
- *			~jsonDiscardResult
- *			~jsonParseError
+ *			z_jsonParseSupport1
  *
  * HISTORY:
  *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
@@ -22,9 +21,9 @@
 
 If ( Not IsEmpty ( character )
 	and character ≠ $~json.ch ;
-	~jsonDiscardResult ( ~jsonParseError (
-		"Expected: " & Quote ( character ) & " instead of " & Quote ( $~json.ch )
-	) ) ;
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"Expected: " & Quote ( character ) & " instead of " & Quote ( $~json.ch ) ; "" ; "" ; ""
+	) ;
 	
 	Let ( [
 		~! = /* logging start disabled LogWriterMemoryCreateEntry (
