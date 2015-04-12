@@ -98,7 +98,14 @@ Case (
 				) ;
 				/* update pointer */
 				$~json.at = ~escapePos + 1 ;
-				~! = ~jsonParseNext ( "" ) ;
+				~! = /* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				;
 				/* unescape the character */
 				~ch = Case (
 					$~json.ch = "u" ; 		z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; "" ; "" ; "" ) ;
@@ -177,7 +184,14 @@ Case (
 	 */
 	Let ( [
 		private = private + 1 ;
-		~ch = ~jsonParseNext ( "" ) ;
+		~ch = /* function:next */
+			Let ( [
+				$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+				$~json.at = $~json.at + 1
+			] ;
+				$~json.ch
+			)
+		;
 		~hex = Position (
 			"0123456789ABCDEF" ;
 			~ch ;
