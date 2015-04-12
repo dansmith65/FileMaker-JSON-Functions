@@ -35,7 +35,7 @@ Let ( [
 		
 		/* array */
 		$~json.ch = "[" ;
-		~jsonParseArrayGetKeyList ( "" ) ;
+		z_jsonParseSupport2 ( 212 /* ParseArrayGetKeyList */ ; "" ; "" ; "" ; "" ) ;
 		
 		/* else: string, number, or word */
 		~jsonDiscardResult ( ~jsonParseError (

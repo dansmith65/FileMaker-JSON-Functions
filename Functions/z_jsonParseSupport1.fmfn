@@ -84,7 +84,7 @@ Case (
 			$~json.ch = "[" ;
 			Let ( [
 				~start = $~json.at - 1 ;
-				~! = ~jsonParseArrayFindEnd ( "" ) ;
+				~! = z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" ) ;
 				~end =  $~json.at
 			] ;
 				If ( IsEmpty ( $~json.error ) ;
@@ -148,7 +148,7 @@ Case (
 			
 			/* array */
 			$~json.ch = "[" ;
-			~jsonParseArrayFindValue ( private ) ;
+			z_jsonParseSupport2 ( 211 /* ParseArrayFindValue */ ; private ; "" ; "" ; "" ) ;
 			
 			/* else: string, number, or word */
 			False
