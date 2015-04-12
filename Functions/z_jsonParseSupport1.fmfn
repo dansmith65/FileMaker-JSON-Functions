@@ -10,7 +10,7 @@
  *		functionId = numeric code for function to run, in range of 100 - 199
  *			100		ParseValue
  *			101		ParseValueSkip
- *					FindValue
+ *			110		FindValue
  *					FindEnd
  *					IsEmpty
  *			199		Error
@@ -113,6 +113,65 @@ Case (
 		)
 	] ;
 		res
+	) ;
+	
+	
+	
+	functionId = 110 ;
+	/**
+	 * =====================================================================
+	 * FindValue
+	 * 
+	 * Find the starting position of a value.
+	 *
+	 * parameters:
+	 *		req = json
+	 *		private = keyOrIndex
+	 *
+	 * returns:
+	 *		ParseValue: The extracted value. If the value is an object or array, return the raw json.
+	 *		ParseValueSkip: empty string
+	 * =====================================================================
+	 */
+	Let ( [
+		/* initialize parsing variables */
+		$~json.ch = " " ;
+		$~json.at = 1 ;
+		$~json.text = req ;
+		$~json.error = "" ;
+		~! = ~jsonParseWhitespace
+	] ;
+		Case (
+			/* object */
+			$~json.ch = "{" ;
+			z_jsonParseSupport2 ( 221 /* ParseObjectFindValue */ ; private ; "" ; "" ; "" ) ;
+			
+			/* array */
+			$~json.ch = "[" ;
+			~jsonParseArrayFindValue ( private ) ;
+			
+			/* else: string, number, or word */
+			False
+				& z_jsonParseSupport1 ( 199 /* Error */ ;
+					"value sent to ~jsonFindValue function was a string, number, or word. An object or array was expected."
+				)
+		)
+		
+		/* clean-up */
+		& Let ( [
+			$json.error = $~json.error
+			/* TODO: enable for production use
+				actually, as currently implemented, this function can't clear these
+				values because calling functions are using them.
+				So, any function that calls this one needs to clear these values.
+			; $~json.error = ""
+			$~json.ch = "" ;
+			$~json.at = 1 ;
+			$~json.text = json
+			*/
+		] ;
+			""
+		)
 	) ;
 	
 	

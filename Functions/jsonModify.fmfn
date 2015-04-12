@@ -42,7 +42,7 @@
  * =====================================
  */
 
-If ( ~jsonFindValue ( json ; keyOrIndex ) ;
+If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 	/**
 	 * value was found
 	 * The pointer stores the starting position of the value.
