@@ -112,7 +112,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 		 * determine if the json is empty: {} or []
 		 */
 		~isEmpty = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseIsEmpty
+			z_jsonParseSupport1 ( 121 /* IsEmpty */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**

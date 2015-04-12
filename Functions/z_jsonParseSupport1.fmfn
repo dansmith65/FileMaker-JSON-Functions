@@ -12,7 +12,7 @@
  *			101		ParseValueSkip
  *			110		FindValue
  *			120		FindEnd
- *					IsEmpty
+ *			121		IsEmpty
  *			199		Error
  *		req = requested data (if any)
  *		private = private data, likely sent to recursive calls of a function
@@ -184,12 +184,11 @@ Case (
 	 * Move pointer to the end of the json.
 	 *
 	 * parameters:
-	 *		req = json
-	 *		private = keyOrIndex
+	 *		req = not used
+	 *		private = not used
 	 *
 	 * returns:
-	 *		ParseValue: The extracted value. If the value is an object or array, return the raw json.
-	 *		ParseValueSkip: empty string
+	 *		Empty string.
 	 * =====================================================================
 	 */
 	Let ( [
@@ -213,6 +212,49 @@ Case (
 			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; 1 )
 		)
 	) ;
+	
+	
+	
+	functionId = 121 ;
+	/**
+	 * =====================================================================
+	 * IsEmpty
+	 * 
+	 * Determine if the json is empty: {} or [] (potentially with whitespace)
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Boolean True if json is an empty object or array, False if it isn't.
+	 * =====================================================================
+	 */
+	Let ( [
+		/* initialize parsing variables */
+		$~json.ch = " " ;
+		$~json.at = 1 ;
+		~! = ~jsonParseWhitespace ;
+		~! = If ( $~json.ch ≠ "{" and $~json.ch ≠ "[" ;
+			z_jsonParseSupport1 ( 199 /* Error */ ;
+				"json was a string, number, or word. An object or array was expected. Occurred in IsEmpty function." ; "" ; "" ; ""
+			)
+		) ;
+		~! = /* function:next_no_result */
+			Let ( [
+				$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+				$~json.at = $~json.at + 1
+			] ;
+				""
+			)
+		;
+		~! = ~jsonParseWhitespace 
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			$~json.ch = "}" or $~json.ch = "]"
+		)
+	) ;
+	
 	
 	
 	functionId = 199 ;
