@@ -20,7 +20,6 @@
  *			~jsonParseError
  *			~jsonParseNext
  *			~jsonParseWhitespace
- *			~jsonParseValueSkip
  *
  * NOTES:
  *		Recursive and multiple instances of this function my be running at any
@@ -84,7 +83,7 @@ Case (
 		) & disabled logging end */ "" ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseValueSkip
+			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;

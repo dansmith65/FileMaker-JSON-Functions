@@ -23,7 +23,7 @@
  */
 
 If ( ~jsonFindValue ( json ; keyOrIndex ) ;
-	~jsonParseValue ;
+	z_jsonParseSupport1 ( 100 /* ParseValue */ ; "" ; "" ; "" ; "" ) ;
 	If ( IsEmpty ( $~json.error ) ;
 		"" ; /* not found */
 		"Error: " & $~json.error

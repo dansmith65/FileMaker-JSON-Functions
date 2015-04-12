@@ -8,6 +8,11 @@
  *
  * PARAMETERS:
  *		functionId = numeric code for function to run, in range of 100 - 199
+ *			100		ParseValue
+ *			101		ParseValueSkip
+ *					FindValue
+ *					FindEnd
+ *					IsEmpty
  *			199		Error
  *		req = requested data (if any)
  *		private = private data, likely sent to recursive calls of a function
@@ -36,6 +41,81 @@ Let ( [
 ] ;
 disabled logging end */
 Case (
+	
+	
+	functionId = 100 or functionId = 101 ;
+	/**
+	 * =====================================================================
+	 * ParseValue / ParseValueSkip
+	 * 
+	 * ParseValue: Extract the value at the current pointer's position.
+	 * ParseValueSkip: Find the end of a value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		ParseValue: The extracted value. If the value is an object or array, return the raw json.
+	 *		ParseValueSkip: empty string
+	 * =====================================================================
+	 */
+	Let ( [
+		~! = ~jsonParseWhitespace ;
+		res = Case (
+			/* OBJECT */
+			$~json.ch = "{" ;
+			Let ( [
+				~start = $~json.at - 1 ;
+				~! = z_jsonParseSupport2 ( 220 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
+				~end =  $~json.at
+			] ;
+				If ( IsEmpty ( $~json.error ) ;
+					Middle (
+						$~json.text ;
+						~start ;
+						~end - ~start - 1
+					) ;
+					"Error: " & $~json.error
+				)
+			) ;
+			
+			/* ARRAY */
+			$~json.ch = "[" ;
+			Let ( [
+				~start = $~json.at - 1 ;
+				~! = ~jsonParseArrayFindEnd ( "" ) ;
+				~end =  $~json.at
+			] ;
+				If ( IsEmpty ( $~json.error ) ;
+					Middle (
+						$~json.text ;
+						~start ;
+						~end - ~start - 1
+					) ;
+					"Error: " & $~json.error
+				)
+			) ;
+			
+			$~json.ch = "\"" ;
+			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+			
+			$~json.ch = "-"
+				or (
+					$~json.ch ≥ 0
+					and $~json.ch ≤ 9
+				)
+			;
+			z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
+			
+			/* else */
+			z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
+		)
+	] ;
+		res
+	) ;
+	
+	
 	
 	functionId = 199 ;
 	/**

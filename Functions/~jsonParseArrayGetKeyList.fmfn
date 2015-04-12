@@ -16,7 +16,6 @@
  *			~jsonParseError
  *			~jsonParseNext
  *			~jsonParseWhitespace
- *			~jsonParseValueSkip
  *
  * NOTES:
  *
@@ -94,7 +93,7 @@ Case (
 		) ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseValueSkip
+			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		~! = If ( IsEmpty ( $~json.error ) ;

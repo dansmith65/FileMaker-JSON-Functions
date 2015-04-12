@@ -18,7 +18,6 @@
  * DEPENDENCIES:
  *		Custom Functions:
  *			~jsonFindValue
- *			~jsonParseValueSkip
  *			~jsonEncodeValue
  *
  * NOTES:
@@ -66,7 +65,7 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 		 * Offset starting point by -1 because it is actually pointing at the second
 		 * character after the value.
 		 */
-		~! = ~jsonParseValueSkip ;
+		~! = z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" ) ;
 		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
 			Middle (
 				$~json.text ;

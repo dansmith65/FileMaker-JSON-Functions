@@ -91,7 +91,7 @@ Case (
 		~valueFound = $~jsonParseArrayFindValue.i = index ;
 
 		~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-			~jsonParseValueSkip
+			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;

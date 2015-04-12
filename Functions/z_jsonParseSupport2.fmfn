@@ -8,6 +8,9 @@
  *
  * PARAMETERS:
  *		functionId = numeric code for function to run, in range of 200 - 299
+ *					ParseArrayFindEnd
+ *					ParseArrayFindValue
+ *					ParseArrayGetKeyList
  *			220		ParseObjectFindEnd
  *			221		ParseObjectFindValue
  *			222		ParseObjectGetKeyList
@@ -134,7 +137,7 @@ Case (
 				~jsonParseWhitespace
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-				~jsonParseValueSkip
+				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
 				~jsonParseWhitespace
