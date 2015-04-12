@@ -119,7 +119,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 		 * get the position of the last closing bracket
 		 */
 		~endPosition = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseFindEnd ( "" )
+			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**
