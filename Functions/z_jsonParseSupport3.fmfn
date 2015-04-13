@@ -43,6 +43,78 @@ disabled logging end */
 Case (
 	
 	
+	
+	functionId = 300 ;
+	/**
+	 * =====================================================================
+	 * ParseWhitespace
+	 * 
+	 * Skip whitespace.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Empty string.
+	 *
+	 * notes:
+	 *		Whitespace characters are those listed on wikipedia that are less than
+	 *		or equal to a space character Char(32). This isn't strictly the same
+	 *		as testing if the character is less than or equal to a space, but I
+	 *		think it's sufficient for most use-cases.
+	 *		http://en.wikipedia.org/wiki/Whitespace_character
+	 * =====================================================================
+	 */
+	If ( Not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
+		Let ( [
+			step = step + 1 ;
+			~chunkSize = 10 ;
+			~chunk = Middle ( $~json.text ; $~json.at - 1 ; ~chunkSize ) ;
+			~stripped = Substitute ( ~chunk ; [Char(9);""]; [Char(10);""]; [Char(11);""]; [Char(12);""]; [Char(13);""]; [Char(32);""] ) ;
+			~firstCh = Left ( ~stripped ; 1 )
+			/* logging start disabled 
+			; ~! = LogWriterMemoryCreateEntry (
+				"ParseWhitespace"
+					& " [step:" & step & "]"
+					& " [~chunk:" & ~chunk & "]"
+					& " [~stripped:" & ~stripped & "]"
+					& " [~firstCh:" & ~firstCh & "]"
+			) disabled logging end */
+		] ;
+			If ( IsEmpty ( ~firstCh ) ;
+				/* this chunk has all be stripped */
+				Let ( [
+					$~json.at = $~json.at + ~chunkSize
+				] ;
+					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; step )
+				) ;
+				
+				/* else: move pointer to start of first non stripped character */
+				Let ( [
+					~pos = Position ( ~chunk ; ~firstCh ; 1 ; 1 ) ;
+					$~json.at = $~json.at + ~pos - 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+					/* logging start disabled 
+					; ~! = LogWriterMemoryCreateEntry (
+						"ParseWhitespace end"
+							& " [step:" & step & "]"
+							& " [~pos:" & ~pos & "]"
+					) disabled logging end */
+				] ;
+					"" /* end recursion */
+				)
+			)
+		) ;
+		"" /* end recursion */
+		/* logging start disabled 
+		& LogWriterMemoryCreateEntry (
+			"ParseWhitespace end without moving pointer"
+		) disabled logging end */
+	) ;
+	
+	
+	
 	functionId = 310 ;
 	/**
 	 * =====================================================================

@@ -22,12 +22,12 @@
 
 Let ( [
 	/* initialize parsing variables */
-	$~json.ch = " " ;
-	$~json.at = 1 ;
 	$~json.text = json ;
+	$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+	$~json.at = 2 ;
 	$~json.error = ""
 ] ;
-	~jsonParseWhitespace
+	z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 	& Case (
 		/* object */
 		$~json.ch = "{" ;

@@ -89,7 +89,7 @@ Case (
 				)
 			;
 			~! = If ( IsEmpty ( $~json.error ) ;
-				~jsonParseWhitespace
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if array is empty */
 			~endFound = If ( IsEmpty ( $~json.error ) ;
@@ -144,7 +144,7 @@ Case (
 				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-				~jsonParseWhitespace
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if at end of array */
 			~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
@@ -177,7 +177,7 @@ Case (
 					)
 				)
 				& If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
+					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 				)
 			) ;
 			res = If ( IsEmpty ( $~json.error ) ;
@@ -273,7 +273,7 @@ Case (
 				)
 			;
 			~! = If ( IsEmpty ( $~json.error ) ;
-				~jsonParseWhitespace
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if object is empty */
 			~endFound = If ( IsEmpty ( $~json.error ) ;
@@ -325,7 +325,7 @@ Case (
 				~key = req
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) ;
-				~jsonParseWhitespace
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = 
 				/* function:next_with_param_no_result */
@@ -342,13 +342,13 @@ Case (
 				)
 			;
 			~! = If ( IsEmpty ( $~json.error ) ;
-				~jsonParseWhitespace
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
 				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
-				~jsonParseWhitespace
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if at end of object */
 			~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
@@ -381,7 +381,7 @@ Case (
 					)
 				)
 				& If ( IsEmpty ( $~json.error ) ;
-					~jsonParseWhitespace
+					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 				)
 			) ;
 			res = If ( IsEmpty ( $~json.error ) ;
