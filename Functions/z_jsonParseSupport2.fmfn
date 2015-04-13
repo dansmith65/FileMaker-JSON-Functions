@@ -1,0 +1,447 @@
+/**
+ * =====================================
+ * z_jsonParseSupport2 ( functionId ; req ; private ; res ; step )
+ *
+ * PURPOSE:
+ *		Supporting code for native json parsing functions.
+ *		mid-level/object walking/array walking
+ *
+ * PARAMETERS:
+ *		functionId = numeric code for function to run, in range of 200 - 299
+ *			210		ParseArrayFindEnd
+ *			211		ParseArrayFindValue
+ *			212		ParseArrayGetKeyList
+ *			220		ParseObjectFindEnd
+ *			221		ParseObjectFindValue
+ *			222		ParseObjectGetKeyList
+ *		req = requested data (if any)
+ *		private = private data, likely sent to recursive calls of a function
+ *		res = response
+ *		step = current state of a recursive function
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/* logging start disabled
+Let ( [
+	~! = LogWriterMemoryCreateEntry (
+		"z_jsonParseSupport2 "
+			& " [functionId:" & functionId & "]"
+			& " [step:" & step & "]"
+			& " [req:" & req & "]"
+			& " [private:" & private & "]"
+			& " [res:" & res & "]"
+	)
+] ;
+disabled logging end */
+Case (
+	
+	
+	functionId = 210 /* ParseArrayFindEnd */
+		or functionId = 211 /* ParseArrayFindValue */
+		or functionId = 212 /* ParseArrayGetKeyList */
+	;
+	/**
+	 * =====================================================================
+	 * ARRAY WALKING FUNCTIONS
+	 *
+	 * ParseArrayFindEnd: Move pointer to the end of the array.
+	 * ParseArrayFindValue: Move pointer to the start of the value for a specified index.
+	 * ParseArrayGetKeyList: Get a list of top-level indexes in an array.
+	 *
+	 * parameters:
+	 *		req = index to find for ParseArrayFindValue, not used for others
+	 *		private = current array index
+	 *
+	 * returns:
+	 *		ParseArrayFindEnd: Empty string.
+	 *		ParseArrayFindValue: Boolean True if value is found, False if it isn't or if Error.
+	 *		ParseArrayGetKeyList: A list of top-level indexes in an array.
+	 * =====================================================================
+	 */
+	Case (
+		/**
+		 ******************************************************
+		 * STEP 0: SET-UP
+		 ******************************************************
+		 */
+		not step ;
+		Let ( [
+			private = -1 ;
+			~! =
+				/* function:next_with_param_no_result */
+				If ( $~json.ch ≠ "[" ;
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Pointer was not at start of an array" ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			;
+			~! = If ( $~json.ch ≤ " " ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			) ;
+			/* check if array is empty */
+			~endFound = If ( IsEmpty ( $~json.error ) ;
+				If ( $~json.ch = "]" ;
+					True &
+					/* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			) ;
+			res = Case (
+				functionId ≠ 212 /* ParseArrayGetKeyList */
+					and ~endFound
+				;
+				False ;
+				
+				functionId = 211 /* ParseArrayFindValue */
+					/* index values start at 0, so anything lower is invalid */
+					and req < 0
+				;
+				False
+			) ;
+			step = If (
+				not IsEmpty ( $~json.error )
+					or ~endFound
+					or not IsEmpty ( res )
+				;
+				2 ;	/* clean-up */
+				1	/* main */
+			)
+		] ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step )
+		) ;
+		
+		/**
+		 ******************************************************
+		 * STEP 1: MAIN
+		 ******************************************************
+		 */
+		step = 1 ;
+		Let ( [
+			private = private + 1 ;
+			~key = private ;
+			~valueFound = If ( functionId = 211 /* ParseArrayFindValue */ ;
+				~key = req
+			) ;
+			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
+			) ;
+			~! = If ( $~json.ch ≤ " " and not ~valueFound ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			) ;
+			/* check if at end of array */
+			~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				If ( $~json.ch = "]" ;
+					True &
+					/* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			) ;
+			/* advance pointer to start of next value */
+			~! = If ( IsEmpty ( $~json.error )
+					and not ~endFound
+					and not ~valueFound
+				;
+				/* function:next_with_param_no_result */
+				If ( $~json.ch ≠ "," ;
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Expected , instead of " & $~json.ch ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+				& If ( $~json.ch ≤ " " ;
+					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+				)
+			) ;
+			res = If ( IsEmpty ( $~json.error ) ;
+				Case (
+					functionId = 212 /* ParseArrayGetKeyList */ ;
+					List ( res ; ~key ) ;
+					
+					functionId = 211 /* ParseArrayFindValue */ ;
+					Case (
+						~valueFound ; 	True ;
+						
+						~endFound ; 	False
+					) ;
+				)
+			) ;
+			~! = /* logging start disabled LogWriterMemoryCreateEntry (
+				"z_jsonParseSupport2"
+					& " [~key:" & ~key & "]"
+					& " [~valueFound:" & ~valueFound & "]"
+					& " [~endFound:" & ~endFound & "]"
+			) & disabled logging end */ "" ;
+			step = If (
+				not IsEmpty ( $~json.error )
+					or ~endFound
+					or ~valueFound
+				;
+				2 ;	/* clean-up */
+				1	/* main */
+			)
+		] ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step )
+		) ;
+		
+		/**
+		 ******************************************************
+		 * ELSE: CLEAN-UP
+		 ******************************************************
+		 */
+		Let ( [
+			res = If ( IsEmpty ( $~json.error ) ;
+				res ;
+				"Error: " & $~json.error
+			)
+		] ;
+			res
+		)
+	) ;
+	
+	
+	
+	functionId = 220 /* ParseObjectFindEnd */
+		or functionId = 221 /* ParseObjectFindValue */
+		or functionId = 222 /* ParseObjectGetKeyList */
+	;
+	/**
+	 * =====================================================================
+	 * OBJECT WALKING FUNCTIONS
+	 *
+	 * ParseObjectFindEnd: Move pointer to the end of the object.
+	 * ParseObjectFindValue: Move pointer to the start of the value for a specified key.
+	 * ParseObjectGetKeyList: Get a list of top-level keys in an object.
+	 *
+	 * parameters:
+	 *		req = key to find for ParseObjectFindValue, not used for others
+	 *		private = not used
+	 *
+	 * returns:
+	 *		ParseObjectFindEnd: Empty string.
+	 *		ParseObjectFindValue: Boolean True if value is found, False if it isn't or if Error.
+	 *		ParseObjectGetKeyList: A list of top-level keys in an object.
+	 * =====================================================================
+	 */
+	Case (
+		/**
+		 ******************************************************
+		 * STEP 0: SET-UP
+		 ******************************************************
+		 */
+		not step ;
+		Let ( [
+			~! = 
+				/* function:next_with_param */
+				If ( $~json.ch ≠ "{" ;
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Pointer was not at start of an object" ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						$~json.ch
+					)
+				)
+			;
+			~! = If ( $~json.ch ≤ " " ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			) ;
+			/* check if object is empty */
+			~endFound = If ( IsEmpty ( $~json.error ) ;
+				If ( $~json.ch = "}" ;
+					True &
+					/* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			) ;
+			res = If ( ~endFound ; False ) ;
+			res = Case (
+				functionId ≠ 222 /* ParseObjectGetKeyList */
+					and ~endFound
+				;
+				False ;
+				
+				functionId = 221 /* ParseObjectFindValue */
+					/* index values start at 0, so anything lower is invalid */
+					and req < 0
+				;
+				False
+			) ;
+			step = If (
+				not IsEmpty ( $~json.error )
+					or ~endFound
+					or not IsEmpty ( res )
+				;
+				2 ;	/* clean-up */
+				1	/* main */
+			)
+		] ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step )
+		) ;
+		
+		/**
+		 ******************************************************
+		 * STEP 1: MAIN
+		 ******************************************************
+		 */
+		step = 1 ;
+		Let ( [
+			~key = z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+			~valueFound = If ( functionId = 221 /* ParseObjectFindValue */ ;
+				~key = req
+			) ;
+			~! = If ( $~json.ch ≤ " " ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			) ;
+			~! = 
+				/* function:next_with_param_no_result */
+				If ( $~json.ch ≠ ":" ;
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Expected : instead of " & $~json.ch ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			;
+			~! = If ( $~json.ch ≤ " " ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			) ;
+			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
+			) ;
+			~! = If ( $~json.ch ≤ " " and not ~valueFound ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			) ;
+			/* check if at end of object */
+			~endFound = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+				If ( $~json.ch = "}" ;
+					True &
+					/* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+			) ;
+			/* advance pointer to start of next key */
+			~! = If ( IsEmpty ( $~json.error )
+					and not ~endFound
+					and not ~valueFound
+				;
+				/* function:next_with_param_no_result */
+				If ( $~json.ch ≠ "," ;
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Expected , instead of " & $~json.ch ; "" ; "" ; ""
+					) ;
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				)
+				& If ( $~json.ch ≤ " " ;
+					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+				)
+			) ;
+			res = If ( IsEmpty ( $~json.error ) ;
+				Case (
+					functionId = 222 /* ParseObjectGetKeyList */ ;
+					List ( res ; ~key ) ;
+					
+					functionId = 221 /* ParseObjectFindValue */ ;
+					Case (
+						~valueFound ; 	True ;
+						
+						~endFound ; 	False
+					) ;
+				)
+			) ;
+			~! = /* logging start disabled LogWriterMemoryCreateEntry (
+				"z_jsonParseSupport2"
+					& " [~key:" & ~key & "]"
+					& " [~valueFound:" & ~valueFound & "]"
+					& " [~endFound:" & ~endFound & "]"
+			) & disabled logging end */ "" ;
+			step = If (
+				not IsEmpty ( $~json.error )
+					or ~endFound
+					or ~valueFound
+				;
+				2 ;	/* clean-up */
+				1	/* main */
+			)
+		] ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step )
+		) ;
+		
+		/**
+		 ******************************************************
+		 * ELSE: CLEAN-UP
+		 ******************************************************
+		 */
+		Let ( [
+			res = If ( IsEmpty ( $~json.error ) ;
+				res ;
+				"Error: " & $~json.error
+			)
+		] ;
+			res
+		)
+	) ;
+	
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"FunctionId [" & functionId & "]does not exist" ; "" ; "" ; ""
+	)
+)
+
+/* logging start disabled
+)
+disabled logging end */

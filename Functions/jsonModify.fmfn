@@ -17,9 +17,8 @@
  *
  * DEPENDENCIES:
  *		Custom Functions:
- *			~jsonFindValue
- *			~jsonParseValueSkip
- *			~jsonEncodeValue
+ *			z_jsonParseSupport1 - 3
+ *			z_jsonEncodeSupport
  *
  * NOTES:
  *
@@ -43,7 +42,7 @@
  * =====================================
  */
 
-If ( ~jsonFindValue ( json ; keyOrIndex ) ;
+If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 	/**
 	 * value was found
 	 * The pointer stores the starting position of the value.
@@ -66,7 +65,7 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 		 * Offset starting point by -1 because it is actually pointing at the second
 		 * character after the value.
 		 */
-		~! = ~jsonParseValueSkip ;
+		~! = z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" ) ;
 		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
 			Middle (
 				$~json.text ;
@@ -91,7 +90,7 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 				) ;
 				newValue ;
 
-				~jsonEncodeValue ( newValue )
+				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
 			)
 		)
 	] ;
@@ -113,14 +112,14 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 		 * determine if the json is empty: {} or []
 		 */
 		~isEmpty = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseIsEmpty
+			z_jsonParseSupport1 ( 121 /* IsEmpty */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**
 		 * get the position of the last closing bracket
 		 */
 		~endPosition = If ( IsEmpty ( $~json.error ) ;
-			~jsonParseFindEnd ( "" )
+			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**
@@ -162,7 +161,7 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 				) ;
 				newValue ;
 
-				~jsonEncodeValue ( newValue )
+				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
 			)
 		)
 	] ;
@@ -171,7 +170,7 @@ If ( ~jsonFindValue ( json ; keyOrIndex ) ;
 				& If ( not ~isEmpty ; "," )
 				& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
 					/* keyOrIndex is a string, so assume it's meant to be an object key */
-					~jsonEncodeString ( keyOrIndex )
+					z_jsonEncodeSupport ( 2 /* String */ ; keyOrIndex )
 					& ":"
 				)
 				& ~newValue

@@ -10,7 +10,7 @@
  *		json = the json string
  *
  * DEPENDENCIES:
- *		
+ *		z_jsonParseSupport2
  *
  * NOTES:
  *
@@ -20,35 +20,31 @@
  * =====================================
  */
 
-/* logging start */ LogWriterMemoryCreateEntry (
-	"jsonGetKeyList start"
-) & /* logging end */
-
 Let ( [
 	/* initialize parsing variables */
-	$~json.ch = " " ;
-	$~json.at = 1 ;
 	$~json.text = json ;
+	$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+	$~json.at = 2 ;
 	$~json.error = ""
 ] ;
-	~jsonParseWhitespace
+	If ( $~json.ch ≤ " " ;
+		z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+	)
 	& Case (
 		/* object */
 		$~json.ch = "{" ;
-		~jsonParseObjectGetKeyList ( "" ) ;
+		z_jsonParseSupport2 ( 222 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
 		
 		/* array */
 		$~json.ch = "[" ;
-		~jsonParseArrayGetKeyList ( "" ) ;
+		z_jsonParseSupport2 ( 212 /* ParseArrayGetKeyList */ ; "" ; "" ; "" ; "" ) ;
 		
 		/* else: string, number, or word */
-		~jsonDiscardResult ( ~jsonParseError (
-			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected."
-		) )
-		& "Error: "
-		& ~jsonParseError (
-			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected."
+		z_jsonParseSupport1 ( 199 /* Error */ ;
+			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected." ; "" ; "" ; ""
 		)
+		& "Error: "
+		& $~json.error
 	)
 	
 	/* clean-up */

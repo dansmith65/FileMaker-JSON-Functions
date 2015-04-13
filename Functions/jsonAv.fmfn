@@ -9,7 +9,7 @@
  *		value = any value to be encoded
  *
  * DEPENDENCIES:
- *		none
+ *		z_jsonEncodeSupport
  *
  * HISTORY:
  *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
@@ -32,7 +32,7 @@ If (
 	) ;
 	value ;
 
-	~jsonEncodeValue ( value )
+	z_jsonEncodeSupport ( 1 /* Value */ ; value )
 )
 
 & ","

@@ -18,7 +18,7 @@
  * =====================================
  */
 
-~jsonEncodeString ( key )
+z_jsonEncodeSupport ( 1 /* String */ ; key )
 & ":"
 & If (
 	/* return the value as-is if it's a json array or object */
@@ -35,6 +35,6 @@
 	) ;
 	value ;
 
-	~jsonEncodeValue ( value )
+	z_jsonEncodeSupport ( 1 /* Value */ ; value )
 )
 & ","

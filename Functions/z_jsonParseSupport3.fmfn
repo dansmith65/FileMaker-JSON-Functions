@@ -1,0 +1,474 @@
+/**
+ * =====================================
+ * z_jsonParseSupport3 ( functionId ; req ; private ; res ; step )
+ *
+ * PURPOSE:
+ *		Supporting code for native json parsing functions.
+ *		low-level/specific value parsing
+ *
+ * PARAMETERS:
+ *		functionId = numeric code for function to run, in range of 300 - 399
+ *			300		ParseWhitespace
+ *			310		ParseString
+ *			311		ParseHex
+ *			320		ParseNumber
+ *			321		ParseDigits
+ *			330		ParseWord
+ *		req = requested data (if any)
+ *		private = private data, likely sent to recursive calls of a function
+ *		res = response
+ *		step = current state of a recursive function
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/* logging start disabled
+Let ( [
+	~! = LogWriterMemoryCreateEntry (
+		"z_jsonParseSupport3 "
+			& " [functionId:" & functionId & "]"
+			& " [step:" & step & "]"
+			& " [req:" & req & "]"
+			& " [private:" & private & "]"
+			& " [res:" & res & "]"
+	)
+] ;
+disabled logging end */
+Case (
+	
+	
+	
+	functionId = 300 ;
+	/**
+	 * =====================================================================
+	 * ParseWhitespace
+	 * 
+	 * Skip whitespace.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Empty string.
+	 *
+	 * notes:
+	 *		Whitespace characters are those listed on wikipedia that are less than
+	 *		or equal to a space character Char(32). This isn't strictly the same
+	 *		as testing if the character is less than or equal to a space, but I
+	 *		think it's sufficient for most use-cases.
+	 *		http://en.wikipedia.org/wiki/Whitespace_character
+	 * =====================================================================
+	 */
+	If ( Not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
+		Let ( [
+			step = step + 1 ;
+			~chunkSize = 10 ;
+			~chunk = Middle ( $~json.text ; $~json.at - 1 ; ~chunkSize ) ;
+			~stripped = Substitute ( ~chunk ; [Char(9);""]; [Char(10);""]; [Char(11);""]; [Char(12);""]; [Char(13);""]; [Char(32);""] ) ;
+			~firstCh = Left ( ~stripped ; 1 )
+			/* logging start disabled 
+			; ~! = LogWriterMemoryCreateEntry (
+				"ParseWhitespace"
+					& " [step:" & step & "]"
+					& " [~chunk:" & ~chunk & "]"
+					& " [~stripped:" & ~stripped & "]"
+					& " [~firstCh:" & ~firstCh & "]"
+			) disabled logging end */
+		] ;
+			If ( IsEmpty ( ~firstCh ) ;
+				/* this chunk has all be stripped */
+				Let ( [
+					$~json.at = $~json.at + ~chunkSize
+				] ;
+					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; step )
+				) ;
+				
+				/* else: move pointer to start of first non stripped character */
+				Let ( [
+					~pos = Position ( ~chunk ; ~firstCh ; 1 ; 1 ) ;
+					$~json.at = $~json.at + ~pos - 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+					/* logging start disabled 
+					; ~! = LogWriterMemoryCreateEntry (
+						"ParseWhitespace end"
+							& " [step:" & step & "]"
+							& " [~pos:" & ~pos & "]"
+					) disabled logging end */
+				] ;
+					"" /* end recursion */
+				)
+			)
+		) ;
+		"" /* end recursion */
+		/* logging start disabled 
+		& LogWriterMemoryCreateEntry (
+			"ParseWhitespace end without moving pointer"
+		) disabled logging end */
+	) ;
+	
+	
+	
+	functionId = 310 ;
+	/**
+	 * =====================================================================
+	 * ParseString
+	 * 
+	 * Extract an decode a json string.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = iteration counter (for debugging)
+	 *
+	 * returns:
+	 *		FileMaker text (the original value before it was encoded as json).
+	 * =====================================================================
+	 */
+	Let ( [
+		private = private + 1 ;
+		~end = Position (
+			$~json.text ;
+			"\"" ;
+			$~json.at ; 	/* start */
+			1 				/* occurrence */
+		) ;
+		~escapePos = Position (
+			$~json.text ;
+			"\\" ;
+			$~json.at ; 	/* start */
+			1 				/* occurrence */
+		)
+	] ;
+		Case (
+			~end = 0 ;
+			z_jsonParseSupport1 ( 199 /* Error */ ;
+				"Bad string: reached end of json before end of string" ; "" ; "" ; ""
+			) & "Error: " & $~json.error ;
+			
+			~escapePos > 0 and ~escapePos < ~end ;
+			/* the escape character was found */
+			Let ( [
+				/* logging start disabled
+				~! = LogWriterMemoryCreateEntry (
+					"z_jsonParseSupport3 ParseString escape found"
+						& " [private:" & private & "]"
+						& " [res:" & res & "]"
+						& " [~end:" & ~end & "]"
+						& " [~escapePos:" & ~escapePos & "]"
+				) ; disabled logging end */
+				/* extract data from pointer to escape character */
+				~string = Middle (
+					$~json.text ;
+					$~json.at ;
+					~escapePos - $~json.at
+				) ;
+				/* update pointer */
+				$~json.at = ~escapePos + 1 ;
+				~! = /* function:next_no_result */
+					Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				;
+				/* unescape the character */
+				~ch = Case (
+					$~json.ch = "u" ; 		z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; "" ; "" ; "" ) ;
+					$~json.ch = "\"" ;		"\"" ;
+					$~json.ch = "\\" ;		"\\" ;
+					$~json.ch = "/" ;		"/" ;
+					$~json.ch = "b" ;		Char ( 8 ) ;
+					$~json.ch = "f" ;		Char ( 12 ) ;
+					$~json.ch = "n" ;		Char ( 10 ) ;
+					$~json.ch = "r" ;		Char ( 13 ) ;
+					$~json.ch = "t" ;		Char ( 9 ) ;
+					/* else */
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Bad string: invalid value after backslash escape" ; "" ; "" ; ""
+					)
+				)
+				/* logging start disabled
+				; ~! = LogWriterMemoryCreateEntry (
+					"z_jsonParseSupport3 ParseString"
+						& " [private:" & private & "]"
+						& " [~string:" & ~string & "]"
+						& " [~ch:" & ~ch & "]"
+						& " [res:" & res & ~string & ~ch & "]"
+						& " [~end:" & ~end & "]"
+						& " [~escapePos:" & ~escapePos & "]"
+				) disabled logging end */
+			] ;
+				z_jsonParseSupport3 ( 310 /* ParseString */ ;
+					"" ;
+					private ;
+					res & ~string & ~ch ;
+					""
+				)
+			) ;
+			
+			/* else: end recursion */
+			Let ( [
+				~string = Middle ( $~json.text ; $~json.at ; ~end - $~json.at ) ;
+				/* update pointer */
+				$~json.at = ~end + 2 ;
+				$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				/* logging start disabled
+				; ~! = LogWriterMemoryCreateEntry (
+					"z_jsonParseSupport3 ParseString end"
+						& " [private:" & private & "]"
+						& " [res:" & res & ~string & "]"
+						& " [~end:" & ~end & "]"
+						& " [~escapePos:" & ~escapePos & "]"
+				) disabled logging end */
+			] ;
+				If ( Not IsEmpty ( $~json.error ) ;		/* an error occurred */
+					"Error: " & $~json.error ;
+					res & ~string
+				)
+			)
+		)
+	) ;
+	
+	
+	
+	
+	functionId = 311 ;
+	/**
+	 * =====================================================================
+	 * ParseHex
+	 * 
+	 * While parsing a string, convert an escaped hex code to a unicode value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = internal use only; iteration counter
+	 *
+	 * returns:
+	 *		Unicode character.
+	 * =====================================================================
+	 */
+	Let ( [
+		private = private + 1 ;
+		~ch = /* function:next */
+			Let ( [
+				$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+				$~json.at = $~json.at + 1
+			] ;
+				$~json.ch
+			)
+		;
+		~hex = Position (
+			"0123456789ABCDEF" ;
+			~ch ;
+			1 ;
+			1
+		) - 1 ;
+		res = res * 16 + ~hex
+	] ;
+		Case (
+			not IsEmpty ( $~json.error )	;	/* an error occurred */
+			"" ;
+			
+			IsEmpty ( ~hex )
+				or ~hex < 0
+				or ~hex > 15
+				or private = 4
+			;
+			Char ( res ) ;		/* return the unicode character */
+			
+			z_jsonParseSupport3 ( 311 /* ParseHex */ ; "" ; private ; res ; step )
+		)
+	) ;
+	
+	
+	
+	functionId = 320 ;
+	/**
+	 * =====================================================================
+	 * ParseNumber
+	 * 
+	 * While parsing a string, convert an escaped hex code to a unicode value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Number
+	 * =====================================================================
+	 */
+	Let ( [
+		~string = 
+			If ( $~json.ch = "-" ;
+				"-"
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+			)
+
+			& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
+
+			& If ( $~json.ch = "." ;
+				"."
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+				& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
+			)
+
+			& If ( $~json.ch = "e" ;
+				$~json.ch
+					/* function:next_no_result */
+					& Let ( [
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1
+					] ;
+						""
+					)
+					& If ( $~json.ch = "-" or $~json.ch = "+" ;
+						$~json.ch
+							/* function:next_no_result */
+							& Let ( [
+								$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+								$~json.at = $~json.at + 1
+							] ;
+								""
+							)
+					)
+			)
+
+			& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			GetAsNumber ( ~string )
+		)
+	) ;
+	
+	
+	
+	functionId = 321 ;
+	/**
+	 * =====================================================================
+	 * ParseDigits
+	 * 
+	 * Extract a stream of digits
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		a stream of digits as text
+	 * =====================================================================
+	 */
+	If ( $~json.ch ≥ "0" and $~json.ch ≤ "9" ;
+		Let ( [
+			~chunkSize = 10 ;
+			~chunk = Middle ( $~json.text ; $~json.at - 1 ; ~chunkSize ) ;
+			~noDigits = Substitute ( ~chunk ; [0;""]; [1;""]; [2;""]; [3;""]; [4;""]; [5;""]; [6;""]; [7;""]; [8;""]; [9;""] ) ;
+			~firstNonDigit = Left ( ~noDigits ; 1 )
+		] ;
+			If ( IsEmpty ( ~firstNonDigit ) ;
+				/* this chunk is all digits */
+				Let ( [
+					$~json.at = $~json.at + ~chunkSize
+				] ;
+					z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; res & ~chunk ; "" )
+				) ;
+				
+				/* else: move pointer to start of first non digit */
+				Let ( [
+					~pos = Position ( ~chunk ; ~firstNonDigit ; 1 ; 1 ) ;
+					~digits = Middle ( ~chunk ; 1 ; ~pos - 1 ) ;
+					$~json.at = $~json.at + ~pos - 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					res & ~digits
+				)
+			)
+		) ;
+		res
+	) ;
+	
+	
+	
+	functionId = 330 ;
+	/**
+	 * =====================================================================
+	 * ParseWord
+	 * 
+	 * Extract a stream of digits
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		a stream of digits as text
+	 * =====================================================================
+	 */
+	If ( $~json.ch ≠ "t" and $~json.ch ≠ "f" and $~json.ch ≠ "n" ;
+		z_jsonParseSupport1 ( 199 /* Error */ ;
+			"Unexpected " & Quote ( $~json.ch ) & " at start of ParseWord" ; "" ; "" ; ""
+		)
+		& "Error: " & $~json.error ;
+		
+		Let ( [
+			~len =  Case (
+				$~json.ch = "t" ;		4 ;
+				$~json.ch = "f" ;		5 ;
+				$~json.ch = "n" ;		4
+			) ;
+			~word = Middle ( $~json.text ; $~json.at - 1 ; ~len ) ;
+			res = Case (
+				~word = "true" ;		True ;
+				~word = "false" ;		False ;
+				~word = "null" ;		"json:null"
+			)
+		] ;
+			If ( IsEmpty ( res ) ;
+				z_jsonParseSupport1 ( 199 /* Error */ ;
+					"Invalid word " & Quote ( ~word ) ; "" ; "" ; ""
+				)
+				& "Error: " & $~json.error ;
+				
+				/* else: update pointer, return word */
+				Let ( [
+					$~json.at = $~json.at + ~len ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					res
+				)
+			)
+		)
+	) ;
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"FunctionId [" & functionId & "]does not exist" ; "" ; "" ; ""
+	)
+)
+
+/* logging start disabled
+)
+disabled logging end */

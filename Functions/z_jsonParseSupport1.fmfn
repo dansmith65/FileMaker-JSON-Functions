@@ -1,0 +1,325 @@
+/**
+ * =====================================
+ * z_jsonParseSupport1 ( functionId ; req ; private ; res ; step )
+ *
+ * PURPOSE:
+ *		Supporting code for native json parsing functions.
+ *		high-level/supporting/control/dispatch
+ *
+ * PARAMETERS:
+ *		functionId = numeric code for function to run, in range of 100 - 199
+ *			100		ParseValue
+ *			101		ParseValueSkip
+ *			110		FindValue
+ *			120		FindEnd
+ *			121		IsEmpty
+ *			199		Error
+ *		req = requested data (if any)
+ *		private = private data, likely sent to recursive calls of a function
+ *		res = response
+ *		step = current state of a recursive function
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+/* logging start disabled
+Let ( [
+	~! = LogWriterMemoryCreateEntry (
+		"z_jsonParseSupport1 "
+			& " [functionId:" & functionId & "]"
+			& " [step:" & step & "]"
+			& " [req:" & req & "]"
+			& " [private:" & private & "]"
+			& " [res:" & res & "]"
+	)
+] ;
+disabled logging end */
+Case (
+	
+	
+	functionId = 100 or functionId = 101 ;
+	/**
+	 * =====================================================================
+	 * ParseValue / ParseValueSkip
+	 * 
+	 * ParseValue: Extract the value at the current pointer's position.
+	 * ParseValueSkip: Find the end of a value.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		ParseValue: The extracted value. If the value is an object or array, return the raw json.
+	 *		ParseValueSkip: empty string
+	 * =====================================================================
+	 */
+	Let ( [
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
+		res = Case (
+			/* OBJECT */
+			$~json.ch = "{" ;
+			Let ( [
+				~start = $~json.at - 1 ;
+				~! = z_jsonParseSupport2 ( 220 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
+				~end =  $~json.at
+			] ;
+				If ( IsEmpty ( $~json.error ) ;
+					Middle (
+						$~json.text ;
+						~start ;
+						~end - ~start - 1
+					) ;
+					"Error: " & $~json.error
+				)
+			) ;
+			
+			/* ARRAY */
+			$~json.ch = "[" ;
+			Let ( [
+				~start = $~json.at - 1 ;
+				~! = z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" ) ;
+				~end =  $~json.at
+			] ;
+				If ( IsEmpty ( $~json.error ) ;
+					Middle (
+						$~json.text ;
+						~start ;
+						~end - ~start - 1
+					) ;
+					"Error: " & $~json.error
+				)
+			) ;
+			
+			$~json.ch = "\"" ;
+			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+			
+			$~json.ch = "-"
+				or (
+					$~json.ch ≥ 0
+					and $~json.ch ≤ 9
+				)
+			;
+			z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
+			
+			/* else */
+			z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
+		)
+	] ;
+		res
+	) ;
+	
+	
+	
+	functionId = 110 ;
+	/**
+	 * =====================================================================
+	 * FindValue
+	 * 
+	 * Find the starting position of a value.
+	 *
+	 * parameters:
+	 *		req = json
+	 *		private = keyOrIndex
+	 *
+	 * returns:
+	 *		ParseValue: The extracted value. If the value is an object or array, return the raw json.
+	 *		ParseValueSkip: empty string
+	 * =====================================================================
+	 */
+	Let ( [
+		/* initialize parsing variables */
+		$~json.text = req ;
+		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+		$~json.at = 2 ;
+		$~json.error = "" ;
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		)
+	] ;
+		Case (
+			/* object */
+			$~json.ch = "{" ;
+			z_jsonParseSupport2 ( 221 /* ParseObjectFindValue */ ; private ; "" ; "" ; "" ) ;
+			
+			/* array */
+			$~json.ch = "[" ;
+			z_jsonParseSupport2 ( 211 /* ParseArrayFindValue */ ; private ; "" ; "" ; "" ) ;
+			
+			/* else: string, number, or word */
+			False
+				& z_jsonParseSupport1 ( 199 /* Error */ ;
+					"value sent to ~jsonFindValue function was a string, number, or word. An object or array was expected."
+				)
+		)
+		
+		/* clean-up */
+		& Let ( [
+			$json.error = $~json.error
+			/* TODO: enable for production use
+				actually, as currently implemented, this function can't clear these
+				values because calling functions are using them.
+				So, any function that calls this one needs to clear these values.
+			; $~json.error = ""
+			$~json.ch = "" ;
+			$~json.at = 1 ;
+			$~json.text = json
+			*/
+		] ;
+			""
+		)
+	) ;
+	
+	
+	
+	functionId = 120 ;
+	/**
+	 * =====================================================================
+	 * FindEnd
+	 * 
+	 * Move pointer to the end of the json.
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Empty string.
+	 * =====================================================================
+	 */
+	Let ( [
+		/* initialize parsing variables on first iteration */
+		$~json.ch = If ( not step ;
+			" " ;
+			$~json.ch
+		) ;
+		$~json.at = If ( not step ;
+			Length ( $~json.text ) ;
+			$~json.at
+		) ;
+		/* same as jsonParseNext, but in reverse */
+		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+		$~json.at = $~json.at - 1 ;
+		~endFound =
+			$~json.ch = "}"
+			or $~json.ch = "]"
+	] ;
+		If ( not ~endFound ;
+			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; 1 )
+		)
+	) ;
+	
+	
+	
+	functionId = 121 ;
+	/**
+	 * =====================================================================
+	 * IsEmpty
+	 * 
+	 * Determine if the json is empty: {} or [] (potentially with whitespace)
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = not used
+	 *
+	 * returns:
+	 *		Boolean True if json is an empty object or array, False if it isn't.
+	 * =====================================================================
+	 */
+	Let ( [
+		/* initialize parsing variables */
+		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+		$~json.at = 2 ;
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
+		~! = If ( $~json.ch ≠ "{" and $~json.ch ≠ "[" ;
+			z_jsonParseSupport1 ( 199 /* Error */ ;
+				"json was a string, number, or word. An object or array was expected. Occurred in IsEmpty function." ; "" ; "" ; ""
+			)
+		) ;
+		~! = /* function:next_no_result */
+			Let ( [
+				$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+				$~json.at = $~json.at + 1
+			] ;
+				""
+			)
+		;
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		)
+	] ;
+		If ( IsEmpty ( $~json.error ) ;
+			$~json.ch = "}" or $~json.ch = "]"
+		)
+	) ;
+	
+	
+	
+	functionId = 199 ;
+	/**
+	 * =====================================================================
+	 * Error
+	 *
+	 * parameters:
+	 *		req = error message
+	 * =====================================================================
+	 */
+	Let ( [
+		/* *
+		 * am not using a standard logging start/end comment because error
+		 * logging should always be enabled
+		 */
+		message = req ;
+		~! = LogWriterMemoryCreateEntry (
+			"Error"
+				& " [message:" & message & "]"
+		) ;
+		/* save the error */
+		$~json.error = List (
+			message
+				& If ( $~json.at > 0 ;
+					" [ch:" & $~json.ch & "]"
+					& " [at:" & $~json.at & "]"
+					& " [context:"
+						& Middle ( $~json.text ; $~json.at - 11 ; 20 )
+						& "]"
+				)
+			;
+			$~json.error
+		) ;
+		/* trigger parent functions to abort */
+		$~json.ch = "" ;
+		$~json.at = -1
+	] ;
+		/**
+		 * Don't return anything because calling function can always access
+		 * the error from $~json.error, and many calling functions don't
+		 * need to access the error.
+		 */
+		""
+	) ;
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"FunctionId [" & functionId & "]does not exist" ; "" ; "" ; ""
+	)
+)
+
+/* logging start disabled
+)
+disabled logging end */
