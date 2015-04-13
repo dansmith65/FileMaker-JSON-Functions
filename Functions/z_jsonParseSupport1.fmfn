@@ -61,7 +61,9 @@ Case (
 	 * =====================================================================
 	 */
 	Let ( [
-		~! = z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" ) ;
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
 		res = Case (
 			/* OBJECT */
 			$~json.ch = "{" ;
@@ -139,7 +141,9 @@ Case (
 		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
 		$~json.at = 2 ;
 		$~json.error = "" ;
-		~! = z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		)
 	] ;
 		Case (
 			/* object */
@@ -234,7 +238,9 @@ Case (
 		/* initialize parsing variables */
 		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
 		$~json.at = 2 ;
-		~! = z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" ) ;
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
 		~! = If ( $~json.ch ≠ "{" and $~json.ch ≠ "[" ;
 			z_jsonParseSupport1 ( 199 /* Error */ ;
 				"json was a string, number, or word. An object or array was expected. Occurred in IsEmpty function." ; "" ; "" ; ""
@@ -248,7 +254,9 @@ Case (
 				""
 			)
 		;
-		~! = z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" ) 
+		~! = If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		)
 	] ;
 		If ( IsEmpty ( $~json.error ) ;
 			$~json.ch = "}" or $~json.ch = "]"

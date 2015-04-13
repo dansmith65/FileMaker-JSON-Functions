@@ -27,7 +27,9 @@ Let ( [
 	$~json.at = 2 ;
 	$~json.error = ""
 ] ;
-	z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+	If ( $~json.ch ≤ " " ;
+		z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+	)
 	& Case (
 		/* object */
 		$~json.ch = "{" ;

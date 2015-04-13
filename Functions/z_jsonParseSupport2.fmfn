@@ -88,7 +88,7 @@ Case (
 					)
 				)
 			;
-			~! = If ( IsEmpty ( $~json.error ) ;
+			~! = If ( $~json.ch ≤ " " ;
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if array is empty */
@@ -143,7 +143,7 @@ Case (
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
 				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 			) ;
-			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+			~! = If ( $~json.ch ≤ " " and not ~valueFound ;
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if at end of array */
@@ -176,7 +176,7 @@ Case (
 						""
 					)
 				)
-				& If ( IsEmpty ( $~json.error ) ;
+				& If ( $~json.ch ≤ " " ;
 					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 				)
 			) ;
@@ -272,7 +272,7 @@ Case (
 					)
 				)
 			;
-			~! = If ( IsEmpty ( $~json.error ) ;
+			~! = If ( $~json.ch ≤ " " ;
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if object is empty */
@@ -324,7 +324,7 @@ Case (
 			~valueFound = If ( functionId = 221 /* ParseObjectFindValue */ ;
 				~key = req
 			) ;
-			~! = If ( IsEmpty ( $~json.error ) ;
+			~! = If ( $~json.ch ≤ " " ;
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = 
@@ -341,13 +341,13 @@ Case (
 					)
 				)
 			;
-			~! = If ( IsEmpty ( $~json.error ) ;
+			~! = If ( $~json.ch ≤ " " ;
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
 				z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 			) ;
-			~! = If ( IsEmpty ( $~json.error ) and not ~valueFound ;
+			~! = If ( $~json.ch ≤ " " and not ~valueFound ;
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			) ;
 			/* check if at end of object */
@@ -380,7 +380,7 @@ Case (
 						""
 					)
 				)
-				& If ( IsEmpty ( $~json.error ) ;
+				& If ( $~json.ch ≤ " " ;
 					z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 				)
 			) ;
