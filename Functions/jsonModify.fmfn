@@ -17,8 +17,8 @@
  *
  * DEPENDENCIES:
  *		Custom Functions:
- *			~jsonFindValue
- *			~jsonEncodeValue
+ *			z_jsonParseSupport1 - 3
+ *			z_jsonEncodeSupport
  *
  * NOTES:
  *
@@ -90,7 +90,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 				) ;
 				newValue ;
 
-				~jsonEncodeValue ( newValue )
+				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
 			)
 		)
 	] ;
@@ -161,7 +161,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 				) ;
 				newValue ;
 
-				~jsonEncodeValue ( newValue )
+				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
 			)
 		)
 	] ;
@@ -170,7 +170,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 				& If ( not ~isEmpty ; "," )
 				& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
 					/* keyOrIndex is a string, so assume it's meant to be an object key */
-					~jsonEncodeString ( keyOrIndex )
+					z_jsonEncodeSupport ( 2 /* String */ ; keyOrIndex )
 					& ":"
 				)
 				& ~newValue

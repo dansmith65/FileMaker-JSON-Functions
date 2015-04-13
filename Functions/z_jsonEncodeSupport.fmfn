@@ -1,0 +1,203 @@
+/**
+ * =====================================
+ * z_jsonEncodeSupport ( functionId ; req )
+ *
+ * PURPOSE:
+ *		Supporting code for native json encoding functions.
+ *
+ * PARAMETERS:
+ *		functionId = numeric code for function to run
+ *			1		Value
+ *			2		String
+ *			3		Number
+ *		req = requested data (if any)
+ *
+ * DEPENDENCIES:
+ *		none
+ *
+ * HISTORY:
+ *		CREATED on 2015-APR-12 by Daniel Smith dansmith65@gmail.com
+ *
+ * =====================================
+ */
+
+Case (
+	
+	
+	functionId = 1 ;
+	/**
+	 * =====================================
+	 * Value ( req )
+	 *
+	 * RETURNS:
+	 *		JSON encoded value.
+	 *
+	 * PARAMETERS:
+	 *		req = string, number, or a named constant:
+	 *			json:true, json:false, json:null
+	 *			should NOT be an object or array (these will be encoded as strings)
+	 *
+	 * DEPENDENCIES:
+	 *		none
+	 *
+	 * NOTES:
+	 *		named constants are NOT case sensitive
+	 *
+	 * HISTORY:
+	 *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+	 *
+	 * =====================================
+	 */
+
+	Case (
+		/* named constants */
+		req = "json:true" ;
+		"true" ;
+		req = "json:false" ;
+		"false" ;
+		req = "json:null" ;
+		"null" ;
+		
+		IsEmpty ( req ) ;
+		"\"\"" ;
+		
+		req = "?" ;
+		"\"?\"" ;
+		
+		/**
+		 * req is too long to be a number
+		 *
+		 * Technically speaking, a number could be longer, but it rarely is. Hard-coding
+		 * this threshold improves performance slightly.
+		 * This threshold can be increased (or deleted) to support longer numbers, if needed.
+		 */
+		Length ( req ) > 1000
+			or req ≠ GetAsNumber ( req )
+		;
+		z_jsonEncodeSupport ( 2 /* String */ ; req ) ;
+		
+		/* else: assume it's a number */
+		z_jsonEncodeSupport ( 3 /* Number */ ; req )
+	) ;
+	
+	
+	functionId = 2 ;
+	/**
+	 * =====================================
+	 * String ( req )
+	 *
+	 * RETURNS:
+	 *		JSON encoded string.
+	 *
+	 * PARAMETERS:
+	 *		req = any value to be escaped as a string
+	 *
+	 * DEPENDENCIES:
+	 *		none
+	 *
+	 * HISTORY:
+	 *		CREATED on 2015-FEB-05 by Daniel Smith dansmith65@gmail.com
+	 *
+	 * =====================================
+	 */
+
+	Let ( [
+		~string = Substitute (
+			req ;
+			[ "\\" ; "\\\\" ] ;	// reverse solidus
+			[ "\"" ; "\\\"" ] ;	// quotation mark
+			[ Char ( 8 ) ; "\b" ] ;		// backspace
+			[ Char ( 12 ) ; "\f" ] ;	// formfeed
+			[ Char ( 10 ) ; "\n" ] ;	// newline
+			[ Char ( 13 ) ; "\r" ] ;	// carriage return
+			[ Char ( 9 ) ; "\t" ]		// horizontal tab
+		) ;
+		~controlCharacters = Filter (
+			~string ;
+			Char ( 1 ) & Char ( 2 ) & Char ( 3 ) & Char ( 4 ) & Char ( 5 ) & Char ( 6 ) & Char ( 7 ) & Char ( 11 ) & Char ( 14 ) & Char ( 15 ) & Char ( 16 ) & Char ( 17 ) & Char ( 18 ) & Char ( 19 ) & Char ( 20 ) & Char ( 21 ) & Char ( 22 ) & Char ( 23 ) & Char ( 24 ) & Char ( 25 ) & Char ( 26 ) & Char ( 27 ) & Char ( 28 ) & Char ( 29 ) & Char ( 30 ) & Char ( 31 )
+		) ;
+		~string = If ( not IsEmpty ( ~controlCharacters ) ;
+			Substitute (
+				~string ;
+				[ Char ( 1 ) ; "\u0001" ] ;
+				[ Char ( 2 ) ; "\u0002" ] ;
+				[ Char ( 3 ) ; "\u0003" ] ;
+				[ Char ( 4 ) ; "\u0004" ] ;
+				[ Char ( 5 ) ; "\u0005" ] ;
+				[ Char ( 6 ) ; "\u0006" ] ;
+				[ Char ( 7 ) ; "\u0007" ] ;
+				[ Char ( 11 ) ; "\u000B" ] ;
+				[ Char ( 14 ) ; "\u000E" ] ;
+				[ Char ( 15 ) ; "\u000F" ] ;
+				[ Char ( 16 ) ; "\u0010" ] ;
+				[ Char ( 17 ) ; "\u0011" ] ;
+				[ Char ( 18 ) ; "\u0012" ] ;
+				[ Char ( 19 ) ; "\u0013" ] ;
+				[ Char ( 20 ) ; "\u0014" ] ;
+				[ Char ( 21 ) ; "\u0015" ] ;
+				[ Char ( 22 ) ; "\u0016" ] ;
+				[ Char ( 23 ) ; "\u0017" ] ;
+				[ Char ( 24 ) ; "\u0018" ] ;
+				[ Char ( 25 ) ; "\u0019" ] ;
+				[ Char ( 26 ) ; "\u001A" ] ;
+				[ Char ( 27 ) ; "\u001B" ] ;
+				[ Char ( 28 ) ; "\u001C" ] ;
+				[ Char ( 29 ) ; "\u001D" ] ;
+				[ Char ( 30 ) ; "\u001E" ] ;
+				[ Char ( 31 ) ; "\u001F" ]
+			) ;
+			~string
+		)
+	] ;
+		If ( not IsEmpty ( ~string ) ;
+			"\"" & ~string & "\"" ;
+			"null"
+		)
+	) ;
+	
+	
+	functionId = 3 ;
+	/**
+	 * =====================================
+	 * Number ( req )
+	 *
+	 * RETURNS:
+	 *		JSON encoded number.
+	 *
+	 * PARAMETERS:
+	 *		req = a valid number
+	 *
+	 * DEPENDENCIES:
+	 *		none
+	 *
+	 * TODO: future version
+	 *		decimal is region-specific, should be updated to work with number formats
+	 *		that use commas for the fractional component
+	 *
+	 * HISTORY:
+	 *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+	 *
+	 * =====================================
+	 */
+
+	Case (
+		Left ( req ; 2 ) = "-." ;
+		Substitute ( req ; "-." ; "-0." ) ;
+
+		Left ( req ; 1 ) = "." ;
+		"0" & req ;
+
+		req
+	) ;
+	
+	
+	
+	/**
+	 * =====================================================================
+	 * ELSE: FUNCTION NOT FOUND
+	 * =====================================================================
+	 */
+	z_jsonParseSupport1 ( 199 /* Error */ ;
+		"FunctionId [" & functionId & "]does not exist" ; "" ; "" ; ""
+	)
+)
