@@ -30,13 +30,15 @@
 
 /* logging start disabled
 Let ( [
+	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
 		"z_jsonParseSupport3 "
 			& " [functionId:" & functionId & "]"
-			& " [step:" & step & "]"
+			& " [uuid:" & uuid & "]"
 			& " [req:" & req & "]"
 			& " [private:" & private & "]"
 			& " [res:" & res & "]"
+			& " [step:" & step & "]"
 	)
 ] ;
 disabled logging end */
