@@ -11,7 +11,7 @@
  *			100		ParseValue
  *			101		ParseValueSkip
  *			110		FindValue
- *			120		FindEnd
+ *			120		GetEndPosition
  *			121		IsEmpty
  *			199		Error
  *		req = requested data (if any)
@@ -185,37 +185,41 @@ Case (
 	functionId = 120 ;
 	/**
 	 * =====================================================================
-	 * FindEnd
+	 * GetEndPosition
 	 * 
-	 * Move pointer to the end of the json.
+	 * returns:
+	 * 		Position of last non-whitespace character in the json.
 	 *
 	 * parameters:
 	 *		req = not used
-	 *		private = not used
+	 *		private = current character
+	 *		res = current position
 	 *
-	 * returns:
-	 *		Empty string.
+	 * notes:
+	 * 		Accesses the json from a reserved variable, but could potentially
+	 *		be modified to access it from the req parameter.
 	 * =====================================================================
 	 */
 	Let ( [
 		/* initialize parsing variables on first iteration */
-		$~json.ch = If ( not step ;
+		~ch = If ( not step ;
 			" " ;
-			$~json.ch
+			private
 		) ;
-		$~json.at = If ( not step ;
+		~at = If ( not step ;
 			Length ( $~json.text ) ;
-			$~json.at
+			res
 		) ;
-		/* same as jsonParseNext, but in reverse */
-		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-		$~json.at = $~json.at - 1 ;
+		
+		~ch = Middle ( $~json.text ; ~at ; 1 ) ;
+		~at = ~at - 1 ;
 		~endFound =
-			$~json.ch = "}"
-			or $~json.ch = "]"
+			~ch = "}"
+			or ~ch = "]"
 	] ;
-		If ( not ~endFound ;
-			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; 1 )
+		If ( ~endFound ;
+			~at ;
+			z_jsonParseSupport1 ( 120 /* GetEndPosition */ ; "" ; ~ch ; ~at ; 1 )
 		)
 	) ;
 	

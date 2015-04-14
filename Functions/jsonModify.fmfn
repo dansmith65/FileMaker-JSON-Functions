@@ -119,7 +119,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 		 * get the position of the last closing bracket
 		 */
 		~endPosition = If ( IsEmpty ( $json.error ) ;
-			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; "" )
+			z_jsonParseSupport1 ( 120 /* GetEndPosition */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**
@@ -129,18 +129,18 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 			Middle (
 				$~json.text ;
 				1 ;
-				$~json.at
+				~endPosition
 			)
 		) ;
 		
 		/**
 		 * get closing bracket and all text after it
-		 * this will preserver original trailing whitespace
+		 * this will preserve original trailing whitespace
 		 */
 		~jsonAfter = If ( IsEmpty ( $json.error ) ;
 			Middle (
 				$~json.text ;
-				$~json.at + 1 ;
+				~endPosition + 1 ;
 				Length ( $~json.text )
 			)
 		) ;
