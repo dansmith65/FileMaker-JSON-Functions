@@ -151,7 +151,7 @@ Case (
 			~end = 0 ;
 			z_jsonParseSupport1 ( 199 /* Error */ ;
 				"Bad string: reached end of json before end of string" ; "" ; "" ; ""
-			) & "Error: " & $json.error ;
+			) & "?" ;
 			
 			~escapePos > 0 and ~escapePos < ~end ;
 			/* the escape character was found */
@@ -231,7 +231,7 @@ Case (
 				) disabled logging end */
 			] ;
 				If ( Not IsEmpty ( $json.error ) ;		/* an error occurred */
-					"Error: " & $json.error ;
+					"?" ;
 					res & ~string
 				)
 			)
@@ -428,7 +428,7 @@ Case (
 		z_jsonParseSupport1 ( 199 /* Error */ ;
 			"Unexpected " & Quote ( $~json.ch ) & " at start of ParseWord" ; "" ; "" ; ""
 		)
-		& "Error: " & $json.error ;
+		& "?" ;
 		
 		Let ( [
 			~len =  Case (
@@ -447,7 +447,7 @@ Case (
 				z_jsonParseSupport1 ( 199 /* Error */ ;
 					"Invalid word " & Quote ( ~word ) ; "" ; "" ; ""
 				)
-				& "Error: " & $json.error ;
+				& "?" ;
 				
 				/* else: update pointer, return word */
 				Let ( [

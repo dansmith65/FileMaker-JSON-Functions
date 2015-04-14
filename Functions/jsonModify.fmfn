@@ -66,7 +66,7 @@ Let ( [
 ] ;
 	Case (
 		not IsEmpty ( $json.error ) ;
-		"Error: " & $json.error ;
+		"?" ;
 		
 		/**
 		 * value was found
@@ -142,7 +142,7 @@ Let ( [
 			)
 		] ;
 			If ( not IsEmpty ( $json.error ) ;
-				"Error: " & $json.error ;
+				"?" ;
 				
 				~jsonBefore
 					& If ( not ~isEmpty ; "," )

@@ -274,7 +274,7 @@ Case (
 		 */
 		res = If ( step = 2 ;
 			If ( not IsEmpty ( $json.error ) ;
-				"Error: " & $json.error ;
+				"?" ;
 				res
 			) ;
 			res
@@ -559,7 +559,7 @@ Case (
 		 */
 		res = If ( step = 2 ;
 			If ( not IsEmpty ( $json.error ) ;
-				"Error: " & $json.error ;
+				"?" ;
 				res
 			) ;
 			res

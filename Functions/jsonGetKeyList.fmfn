@@ -43,8 +43,7 @@ Let ( [
 		z_jsonParseSupport1 ( 199 /* Error */ ;
 			"value sent to jsonGetKeyList function was not an object or array" ; "" ; "" ; ""
 		)
-			& "Error: "
-			& $json.error
+			& "?"
 	)
 	
 	& Let ( [
