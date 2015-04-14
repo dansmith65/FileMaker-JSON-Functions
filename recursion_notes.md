@@ -235,3 +235,27 @@ If ( iteration >= 10000 ;
 
 iteration
 ```
+
+
+###### <a name="9">Sub function calling the parent can use tail recursion.</a>
+
+```
+/**
+ * test ( iteration )
+ *
+ * test ( 0 ) = "?"
+ * test ( 1 ) = 25000 
+ */
+
+If ( iteration >= 25000 ;
+    iteration ;
+    testSub ( iteration + 1 )
+)
+
+/**
+ * testSub ( iteration )
+ *
+ */
+
+test ( iteration )
+```
