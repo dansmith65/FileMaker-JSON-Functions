@@ -18,7 +18,7 @@
  * =====================================
  */
 
-z_jsonEncodeSupport ( 1 /* String */ ; key )
+z_jsonEncodeSupport ( 2 /* String */ ; key )
 & ":"
 & If (
 	/* return the value as-is if it's a json array or object */
