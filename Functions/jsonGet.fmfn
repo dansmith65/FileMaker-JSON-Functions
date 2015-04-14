@@ -58,6 +58,8 @@ Let ( [
 				/* else */
 				z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
 			) ;
+			
+			/* clean-up parsing variables */
 			$~json.text = "" ;
 			$~json.ch = "" ;
 			$~json.at = ""

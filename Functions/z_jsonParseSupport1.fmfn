@@ -159,7 +159,7 @@ Case (
 			/* else: string, number, or word */
 			False
 				& z_jsonParseSupport1 ( 199 /* Error */ ;
-					"value sent to GetValuePosition function was not an object or array"
+					"value sent to GetValuePosition function was not an object or array" ; "" ; "" ; ""
 				)
 		)
 		

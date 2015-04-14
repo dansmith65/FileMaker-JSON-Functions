@@ -41,25 +41,17 @@ Let ( [
 		
 		/* else: string, number, or word */
 		z_jsonParseSupport1 ( 199 /* Error */ ;
-			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected." ; "" ; "" ; ""
+			"value sent to jsonGetKeyList function was not an object or array" ; "" ; "" ; ""
 		)
 			& "Error: "
 			& $json.error
 	)
 	
-	/* clean-up */
 	& Let ( [
-		/* save error to public variable */
-		$json.error = $json.error
-		/* TODO: enable for production use
-			actually, as currently implemented, this function can't clear these
-			values because calling functions are using them.
-			So, any function that calls this one needs to clear these values.
-		; $json.error = ""
+		/* clean-up parsing variables */
+		$~json.text = "" ;
 		$~json.ch = "" ;
-		$~json.at = 1 ;
-		$~json.text = json
-		*/
+		$~json.at = ""
 	] ;
 		""
 	)
