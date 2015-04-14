@@ -66,7 +66,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 		 * character after the value.
 		 */
 		~! = z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" ) ;
-		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
+		~jsonAfter = If ( IsEmpty ( $json.error ) ;
 			Middle (
 				$~json.text ;
 				$~json.at - 1 ;
@@ -74,7 +74,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 			)
 		) ;
 		
-		~newValue = If ( IsEmpty ( $~json.error ) ;
+		~newValue = If ( IsEmpty ( $json.error ) ;
 			If (
 				/* return the value as-is if it's a json array or object */
 				/**
@@ -94,12 +94,12 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 			)
 		)
 	] ;
-		If ( IsEmpty ( $~json.error ) ;
+		If ( IsEmpty ( $json.error ) ;
 			~jsonBefore
 				& ~newValue
 				& ~jsonAfter
 			;
-			"Error: " & $~json.error
+			"Error: " & $json.error
 		)
 	) ;
 
@@ -111,21 +111,21 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 		/**
 		 * determine if the json is empty: {} or []
 		 */
-		~isEmpty = If ( IsEmpty ( $~json.error ) ;
+		~isEmpty = If ( IsEmpty ( $json.error ) ;
 			z_jsonParseSupport1 ( 121 /* IsEmpty */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**
 		 * get the position of the last closing bracket
 		 */
-		~endPosition = If ( IsEmpty ( $~json.error ) ;
+		~endPosition = If ( IsEmpty ( $json.error ) ;
 			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; "" )
 		) ;
 		
 		/**
 		 * get text before the closing bracket
 		 */
-		~jsonBefore =  If ( IsEmpty ( $~json.error ) ;
+		~jsonBefore =  If ( IsEmpty ( $json.error ) ;
 			Middle (
 				$~json.text ;
 				1 ;
@@ -137,7 +137,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 		 * get closing bracket and all text after it
 		 * this will preserver original trailing whitespace
 		 */
-		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
+		~jsonAfter = If ( IsEmpty ( $json.error ) ;
 			Middle (
 				$~json.text ;
 				$~json.at + 1 ;
@@ -145,7 +145,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 			)
 		) ;
 		
-		~newValue = If ( IsEmpty ( $~json.error ) ;
+		~newValue = If ( IsEmpty ( $json.error ) ;
 			If (
 				/* return the value as-is if it's a json array or object */
 				/**
@@ -165,7 +165,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 			)
 		)
 	] ;
-		If ( IsEmpty ( $~json.error ) ;
+		If ( IsEmpty ( $json.error ) ;
 			~jsonBefore
 				& If ( not ~isEmpty ; "," )
 				& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
@@ -176,7 +176,7 @@ If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 				& ~newValue
 				& ~jsonAfter
 			;
-			"Error: " & $~json.error
+			"Error: " & $json.error
 		)
 	)
 )

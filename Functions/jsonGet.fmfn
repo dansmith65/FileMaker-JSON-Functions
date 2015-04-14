@@ -24,8 +24,8 @@
 
 If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
 	z_jsonParseSupport1 ( 100 /* ParseValue */ ; "" ; "" ; "" ; "" ) ;
-	If ( IsEmpty ( $~json.error ) ;
+	If ( IsEmpty ( $json.error ) ;
 		"" ; /* not found */
-		"Error: " & $~json.error
+		"Error: " & $json.error
 	)
 )

@@ -74,13 +74,13 @@ Case (
 				~! = z_jsonParseSupport2 ( 220 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
 				~end =  $~json.at
 			] ;
-				If ( IsEmpty ( $~json.error ) ;
+				If ( IsEmpty ( $json.error ) ;
 					Middle (
 						$~json.text ;
 						~start ;
 						~end - ~start - 1
 					) ;
-					"Error: " & $~json.error
+					"Error: " & $json.error
 				)
 			) ;
 			
@@ -91,13 +91,13 @@ Case (
 				~! = z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" ) ;
 				~end =  $~json.at
 			] ;
-				If ( IsEmpty ( $~json.error ) ;
+				If ( IsEmpty ( $json.error ) ;
 					Middle (
 						$~json.text ;
 						~start ;
 						~end - ~start - 1
 					) ;
-					"Error: " & $~json.error
+					"Error: " & $json.error
 				)
 			) ;
 			
@@ -142,7 +142,7 @@ Case (
 		$~json.text = req ;
 		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
 		$~json.at = 2 ;
-		$~json.error = "" ;
+		$json.error = "" ;
 		~! = If ( $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		)
@@ -165,12 +165,12 @@ Case (
 		
 		/* clean-up */
 		& Let ( [
-			$json.error = $~json.error
+			$json.error = $json.error
 			/* TODO: enable for production use
 				actually, as currently implemented, this function can't clear these
 				values because calling functions are using them.
 				So, any function that calls this one needs to clear these values.
-			; $~json.error = ""
+			; $json.error = ""
 			$~json.ch = "" ;
 			$~json.at = 1 ;
 			$~json.text = json
@@ -260,7 +260,7 @@ Case (
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		)
 	] ;
-		If ( IsEmpty ( $~json.error ) ;
+		If ( IsEmpty ( $json.error ) ;
 			$~json.ch = "}" or $~json.ch = "]"
 		)
 	) ;
@@ -287,7 +287,7 @@ Case (
 				& " [message:" & message & "]"
 		) ;
 		/* save the error */
-		$~json.error = List (
+		$json.error = List (
 			message
 				& If ( $~json.at > 0 ;
 					" [ch:" & $~json.ch & "]"
@@ -297,7 +297,7 @@ Case (
 						& "]"
 				)
 			;
-			$~json.error
+			$json.error
 		) ;
 		/* trigger parent functions to abort */
 		$~json.ch = "" ;
@@ -305,7 +305,7 @@ Case (
 	] ;
 		/**
 		 * Don't return anything because calling function can always access
-		 * the error from $~json.error, and many calling functions don't
+		 * the error from $json.error, and many calling functions don't
 		 * need to access the error.
 		 */
 		""

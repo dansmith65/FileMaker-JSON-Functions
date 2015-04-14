@@ -99,7 +99,7 @@ Case (
 		) ;
 		/* check if array is empty */
 		~endFound = If ( step < 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and $~json.ch = "]"
 			;
 			True &
@@ -144,7 +144,7 @@ Case (
 		) ; disabled logging end */
 		step = If ( step < 1 ;
 			If (
-				not IsEmpty ( $~json.error )
+				not IsEmpty ( $json.error )
 					or ~endFound
 					or not IsEmpty ( res )
 				;
@@ -166,7 +166,7 @@ Case (
 			~key = req
 		) ;
 		~! = If ( step = 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and not ~valueFound
 			;
 			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
@@ -178,7 +178,7 @@ Case (
 		) ;
 		/* check if at end of array */
 		~endFound = If ( step = 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and not ~valueFound
 				and $~json.ch = "]"
 			;
@@ -193,7 +193,7 @@ Case (
 		) ;
 		/* advance pointer to start of next value */
 		~! = If ( step = 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and not ~endFound
 				and not ~valueFound
 			;
@@ -246,7 +246,7 @@ Case (
 		) ; disabled logging end */
 		step = If ( step = 1 ;
 			If (
-				not IsEmpty ( $~json.error )
+				not IsEmpty ( $json.error )
 					or ~endFound
 					or ~valueFound
 				;
@@ -262,8 +262,8 @@ Case (
 		 ******************************************************
 		 */
 		res = If ( step = 2 ;
-			If ( not IsEmpty ( $~json.error ) ;
-				"Error: " & $~json.error ;
+			If ( not IsEmpty ( $json.error ) ;
+				"Error: " & $json.error ;
 				res
 			) ;
 			res
@@ -341,7 +341,7 @@ Case (
 		) ;
 		/* check if object is empty */
 		~endFound = If ( step < 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and $~json.ch = "}"
 			;
 			True &
@@ -385,7 +385,7 @@ Case (
 		) ; disabled logging end */
 		step = If ( step < 1 ;
 			If (
-				not IsEmpty ( $~json.error )
+				not IsEmpty ( $json.error )
 					or ~endFound
 					or not IsEmpty ( res )
 				;
@@ -433,7 +433,7 @@ Case (
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
 		~! = If ( step = 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and not ~valueFound
 			;
 			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
@@ -446,7 +446,7 @@ Case (
 		) ;
 		/* check if at end of object */
 		~endFound = If ( step = 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and not ~valueFound
 				and $~json.ch = "}"
 			;
@@ -461,7 +461,7 @@ Case (
 		) ;
 		/* advance pointer to start of next value */
 		~! = If ( step = 1
-				and IsEmpty ( $~json.error )
+				and IsEmpty ( $json.error )
 				and not ~endFound
 				and not ~valueFound
 			;
@@ -514,7 +514,7 @@ Case (
 		) ; disabled logging end */
 		step = If ( step = 1 ;
 			If (
-				not IsEmpty ( $~json.error )
+				not IsEmpty ( $json.error )
 					or ~endFound
 					or ~valueFound
 				;
@@ -530,8 +530,8 @@ Case (
 		 ******************************************************
 		 */
 		res = If ( step = 2 ;
-			If ( not IsEmpty ( $~json.error ) ;
-				"Error: " & $~json.error ;
+			If ( not IsEmpty ( $json.error ) ;
+				"Error: " & $json.error ;
 				res
 			) ;
 			res

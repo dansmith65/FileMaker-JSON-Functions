@@ -25,7 +25,7 @@ Let ( [
 	$~json.text = json ;
 	$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
 	$~json.at = 2 ;
-	$~json.error = ""
+	$json.error = ""
 ] ;
 	If ( $~json.ch ≤ " " ;
 		z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
@@ -44,18 +44,18 @@ Let ( [
 			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected." ; "" ; "" ; ""
 		)
 		& "Error: "
-		& $~json.error
+		& $json.error
 	)
 	
 	/* clean-up */
 	& Let ( [
 		/* save error to public variable */
-		$json.error = $~json.error
+		$json.error = $json.error
 		/* TODO: enable for production use
 			actually, as currently implemented, this function can't clear these
 			values because calling functions are using them.
 			So, any function that calls this one needs to clear these values.
-		; $~json.error = ""
+		; $json.error = ""
 		$~json.ch = "" ;
 		$~json.at = 1 ;
 		$~json.text = json
