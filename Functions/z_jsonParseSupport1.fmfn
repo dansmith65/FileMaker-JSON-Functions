@@ -32,7 +32,7 @@
 Let ( [
 	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
-		"z_jsonParseSupport1 "
+		"z_jsonParseSupport1"
 			& " [functionId:" & functionId & "]"
 			& " [uuid:" & uuid & "]"
 			& " [req:" & req & "]"
@@ -71,7 +71,7 @@ Case (
 			$~json.ch = "{" ;
 			Let ( [
 				~start = $~json.at - 1 ;
-				~! = z_jsonParseSupport2 ( 220 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
+				~! = z_jsonParseSupport2 ( 200 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
 				~end =  $~json.at
 			] ;
 				If ( IsEmpty ( $json.error ) ;
@@ -150,7 +150,7 @@ Case (
 		Case (
 			/* object */
 			$~json.ch = "{" ;
-			z_jsonParseSupport2 ( 221 /* ParseObjectFindValue */ ; private ; "" ; "" ; "" ) ;
+			z_jsonParseSupport2 ( 201 /* ParseObjectFindValue */ ; private ; "" ; "" ; "" ) ;
 			
 			/* array */
 			$~json.ch = "[" ;

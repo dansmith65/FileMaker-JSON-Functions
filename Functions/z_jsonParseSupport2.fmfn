@@ -8,12 +8,12 @@
  *
  * PARAMETERS:
  *		functionId = numeric code for function to run, in range of 200 - 299
+ *			200		ParseObjectFindEnd
+ *			201		ParseObjectFindValue
+ *			202		ParseObjectGetKeyList
  *			210		ParseArrayFindEnd
  *			211		ParseArrayFindValue
  *			212		ParseArrayGetKeyList
- *			220		ParseObjectFindEnd
- *			221		ParseObjectFindValue
- *			222		ParseObjectGetKeyList
  *		req = requested data (if any)
  *		private = private data, likely sent to recursive calls of a function
  *		res = response
@@ -43,6 +43,292 @@ Let ( [
 ] ;
 disabled logging end */
 Case (
+	
+	
+	
+	functionId = 200 /* ParseObjectFindEnd */
+		or functionId = 201 /* ParseObjectFindValue */
+		or functionId = 202 /* ParseObjectGetKeyList */
+	;
+	/**
+	 * =====================================================================
+	 * OBJECT WALKING FUNCTIONS
+	 *
+	 * ParseObjectFindEnd: Move pointer to the end of the object.
+	 * ParseObjectFindValue: Move pointer to the start of the value for a specified key.
+	 * ParseObjectGetKeyList: Get a list of top-level keys in an object.
+	 *
+	 * parameters:
+	 *		req = key to find for ParseObjectFindValue, not used for others
+	 *		private = not used
+	 *
+	 * returns:
+	 *		ParseObjectFindEnd: Empty string.
+	 *		ParseObjectFindValue: Cache data if value is found, empty if it isn't.
+	 *		ParseObjectGetKeyList: A list of top-level keys in an object.
+	 * =====================================================================
+	 */
+	Let ( [
+		/**
+		 ******************************************************
+		 * STEP 0: SET-UP
+		 ******************************************************
+		 */
+		~! = If ( step < 1 ;
+			/* function:next_with_param_no_result */
+			If ( $~json.ch ≠ "{" ;
+				z_jsonParseSupport1 ( 199 /* Error */ ;
+					"Pointer was not at start of an object" ; "" ; "" ; ""
+				) ;
+				Let ( [
+					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+					$~json.at = $~json.at + 1
+				] ;
+					""
+				)
+			)
+		) ;
+		~! = If ( step < 1
+				and $~json.ch ≤ " "
+			;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
+		/* check if object is empty */
+		~endFound = If ( step < 1
+				and IsEmpty ( $json.error )
+				and $~json.ch = "}"
+			;
+			True &
+				/* function:next_no_result */
+				Let ( [
+					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+					$~json.at = $~json.at + 1
+				] ;
+					""
+				)
+		) ;
+		res = If ( step < 1 ;
+			Case (
+				functionId = 200 ; /* ParseObjectFindEnd */
+				"" ;
+				
+				functionId = 201 ; /* ParseObjectFindValue */
+				If ( IsEmpty ( req )
+						or ~endFound
+					;
+					False
+				) ;
+				
+				functionId = 202 ; /* ParseObjectGetKeyList */
+				""
+			) ;
+			res
+		) ;
+		/* logging start disabled
+		~! = If ( step < 1 ;
+			LogWriterMemoryCreateEntry (
+				"ParseObject setup"
+					& " [functionId:" & functionId & "]"
+					& " [uuid:" & uuid & "]"
+					& " [req:" & req & "]"
+					& " [private:" & private & "]"
+					& " [res:" & res & "]"
+					& " [step:" & step & "]"
+					& " [~endFound:" & ~endFound & "]"
+			) 
+		) ; disabled logging end */
+		step = If ( step < 1 ;
+			If (
+				not IsEmpty ( $json.error )
+					or ~endFound
+					or not IsEmpty ( res )
+				;
+				2 ;		/* clean-up */
+				1		/* main */
+			) ;
+			step
+		) ;
+		
+		/**
+		 ******************************************************
+		 * STEP 1: MAIN
+		 ******************************************************
+		 */
+		~keyStartPos = If ( step = 1 ;
+			$~json.at - 1
+		) ;
+		~key = If ( step = 1 ;
+			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" )
+		) ;
+		~valueFound = If ( step = 1
+				and functionId = 201 /* ParseObjectFindValue */
+			;
+			~key = req
+		) ;
+		~! = If ( step = 1
+				and $~json.ch ≤ " "
+			;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
+		~! = If ( step = 1 ;
+			/* function:next_with_param_no_result */
+			If ( $~json.ch ≠ ":" ;
+				z_jsonParseSupport1 ( 199 /* Error */ ;
+					"Expected : instead of " & $~json.ch ; "" ; "" ; ""
+				) ;
+				Let ( [
+					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+					$~json.at = $~json.at + 1
+				] ;
+					""
+				)
+			)
+		) ;
+		~! = If ( step = 1
+				and $~json.ch ≤ " "
+			;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
+		~valStartPos = If ( step = 1 ;
+			$~json.at - 1
+		) ;
+		~! = If ( step = 1
+				and IsEmpty ( $json.error )
+			;
+			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
+		) ;
+		~valEndPos = If ( step = 1 ;
+			$~json.at - 2
+		) ;
+		~! = If ( step = 1
+				and $~json.ch ≤ " "
+			;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		) ;
+		/* check if at end of object */
+		~endFound = If ( step = 1
+				and IsEmpty ( $json.error )
+				and $~json.ch = "}"
+			;
+			True &
+				/* function:next_no_result */
+				Let ( [
+					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+					$~json.at = $~json.at + 1
+				] ;
+					""
+				)
+		) ;
+		/* advance pointer to start of next value */
+		~! = If ( step = 1
+				and IsEmpty ( $json.error )
+				and not ~endFound
+			;
+			/* function:next_with_param_no_result */
+			If ( $~json.ch ≠ "," ;
+				z_jsonParseSupport1 ( 199 /* Error */ ;
+					"Expected , instead of " & $~json.ch ; "" ; "" ; ""
+				) ;
+				Let ( [
+					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+					$~json.at = $~json.at + 1
+				] ;
+					""
+				)
+			)
+			& If ( $~json.ch ≤ " " ;
+				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+			)
+		) ;
+		~cache = If ( step = 1 ;
+			Substitute ( ~key ;
+				[ Char ( 13 ) /* unicode: carriage return (CR) */ ; "" ] ;
+				[ Char ( 10 ) /* unicode: line feed (LF) */ ; "" ] ;
+				[ "|" ; "" ]
+			)
+				& "|" /* TODO: add value type abbreviation: a, o, s, n, w */
+				& "|" & ~keyStartPos
+				& "|" & ~valStartPos
+				& "|" & ~valEndPos
+				& "|" /* TODO: hash if value is an object or array */
+		) ;
+		res = If ( step = 1 ;
+			Case (
+				functionId = 200 ; /* ParseObjectFindEnd */
+				"" ;
+				
+				functionId = 201 ; /* ParseObjectFindValue */
+				If (
+					~valueFound ;
+					~cache
+				) ;
+				
+				functionId = 202 ; /* ParseObjectGetKeyList */
+				List ( res ; ~key ) ;
+			) ;
+			res
+		) ;
+		/* logging start disabled
+		~! = If ( step = 1 ;
+			LogWriterMemoryCreateEntry (
+				"ParseObject main"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [req:" & req & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [~key:" & ~key & "]"
+				& " [~valueFound:" & ~valueFound & "]"
+				& " [~endFound:" & ~endFound & "]"
+			)
+		) ; disabled logging end */
+		step = If ( step = 1 ;
+			If (
+				not IsEmpty ( $json.error )
+					or ~endFound
+					or ~valueFound
+				;
+				2 ;		/* clean-up */
+				step	/* recurse */
+			) ;
+			step
+		) ;
+		
+		/**
+		 ******************************************************
+		 * ELSE: CLEAN-UP
+		 ******************************************************
+		 */
+		res = If ( step = 2 ;
+			If ( not IsEmpty ( $json.error ) ;
+				"?" ;
+				res
+			) ;
+			res
+		)
+		/* logging start disabled
+		; ~! = If ( step = 2 ;
+			LogWriterMemoryCreateEntry (
+				"ParseObject clean-up"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [req:" & req & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [~key:" & ~key & "]"
+				& " [~valueFound:" & ~valueFound & "]"
+				& " [~endFound:" & ~endFound & "]"
+			)
+		) disabled logging end */
+	] ;
+		If ( step = 1 ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step ) ;
+			res
+		)
+	) ;
+	
 	
 	
 	functionId = 210 /* ParseArrayFindEnd */
@@ -283,291 +569,6 @@ Case (
 		; ~! = If ( step = 2 ;
 			LogWriterMemoryCreateEntry (
 				"ParseArray clean-up"
-				& " [functionId:" & functionId & "]"
-				& " [uuid:" & uuid & "]"
-				& " [req:" & req & "]"
-				& " [private:" & private & "]"
-				& " [res:" & res & "]"
-				& " [step:" & step & "]"
-				& " [~key:" & ~key & "]"
-				& " [~valueFound:" & ~valueFound & "]"
-				& " [~endFound:" & ~endFound & "]"
-			)
-		) disabled logging end */
-	] ;
-		If ( step = 1 ;
-			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step ) ;
-			res
-		)
-	) ;
-	
-	
-	
-	functionId = 220 /* ParseObjectFindEnd */
-		or functionId = 221 /* ParseObjectFindValue */
-		or functionId = 222 /* ParseObjectGetKeyList */
-	;
-	/**
-	 * =====================================================================
-	 * OBJECT WALKING FUNCTIONS
-	 *
-	 * ParseObjectFindEnd: Move pointer to the end of the object.
-	 * ParseObjectFindValue: Move pointer to the start of the value for a specified key.
-	 * ParseObjectGetKeyList: Get a list of top-level keys in an object.
-	 *
-	 * parameters:
-	 *		req = key to find for ParseObjectFindValue, not used for others
-	 *		private = not used
-	 *
-	 * returns:
-	 *		ParseObjectFindEnd: Empty string.
-	 *		ParseObjectFindValue: Cache data if value is found, empty if it isn't.
-	 *		ParseObjectGetKeyList: A list of top-level keys in an object.
-	 * =====================================================================
-	 */
-	Let ( [
-		/**
-		 ******************************************************
-		 * STEP 0: SET-UP
-		 ******************************************************
-		 */
-		~! = If ( step < 1 ;
-			/* function:next_with_param_no_result */
-			If ( $~json.ch ≠ "{" ;
-				z_jsonParseSupport1 ( 199 /* Error */ ;
-					"Pointer was not at start of an object" ; "" ; "" ; ""
-				) ;
-				Let ( [
-					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-					$~json.at = $~json.at + 1
-				] ;
-					""
-				)
-			)
-		) ;
-		~! = If ( step < 1
-				and $~json.ch ≤ " "
-			;
-			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-		) ;
-		/* check if object is empty */
-		~endFound = If ( step < 1
-				and IsEmpty ( $json.error )
-				and $~json.ch = "}"
-			;
-			True &
-				/* function:next_no_result */
-				Let ( [
-					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-					$~json.at = $~json.at + 1
-				] ;
-					""
-				)
-		) ;
-		res = If ( step < 1 ;
-			Case (
-				functionId = 220 ; /* ParseObjectFindEnd */
-				"" ;
-				
-				functionId = 221 ; /* ParseObjectFindValue */
-				If ( IsEmpty ( req )
-						or ~endFound
-					;
-					False
-				) ;
-				
-				functionId = 222 ; /* ParseObjectGetKeyList */
-				""
-			) ;
-			res
-		) ;
-		/* logging start disabled
-		~! = If ( step < 1 ;
-			LogWriterMemoryCreateEntry (
-				"ParseObject setup"
-					& " [functionId:" & functionId & "]"
-					& " [uuid:" & uuid & "]"
-					& " [req:" & req & "]"
-					& " [private:" & private & "]"
-					& " [res:" & res & "]"
-					& " [step:" & step & "]"
-					& " [~endFound:" & ~endFound & "]"
-			) 
-		) ; disabled logging end */
-		step = If ( step < 1 ;
-			If (
-				not IsEmpty ( $json.error )
-					or ~endFound
-					or not IsEmpty ( res )
-				;
-				2 ;		/* clean-up */
-				1		/* main */
-			) ;
-			step
-		) ;
-		
-		/**
-		 ******************************************************
-		 * STEP 1: MAIN
-		 ******************************************************
-		 */
-		~keyStartPos = If ( step = 1 ;
-			$~json.at - 1
-		) ;
-		~key = If ( step = 1 ;
-			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" )
-		) ;
-		~valueFound = If ( step = 1
-				and functionId = 221 /* ParseObjectFindValue */
-			;
-			~key = req
-		) ;
-		~! = If ( step = 1
-				and $~json.ch ≤ " "
-			;
-			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-		) ;
-		~! = If ( step = 1 ;
-			/* function:next_with_param_no_result */
-			If ( $~json.ch ≠ ":" ;
-				z_jsonParseSupport1 ( 199 /* Error */ ;
-					"Expected : instead of " & $~json.ch ; "" ; "" ; ""
-				) ;
-				Let ( [
-					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-					$~json.at = $~json.at + 1
-				] ;
-					""
-				)
-			)
-		) ;
-		~! = If ( step = 1
-				and $~json.ch ≤ " "
-			;
-			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-		) ;
-		~valStartPos = If ( step = 1 ;
-			$~json.at - 1
-		) ;
-		~! = If ( step = 1
-				and IsEmpty ( $json.error )
-			;
-			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
-		) ;
-		~valEndPos = If ( step = 1 ;
-			$~json.at - 2
-		) ;
-		~! = If ( step = 1
-				and $~json.ch ≤ " "
-			;
-			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-		) ;
-		/* check if at end of object */
-		~endFound = If ( step = 1
-				and IsEmpty ( $json.error )
-				and $~json.ch = "}"
-			;
-			True &
-				/* function:next_no_result */
-				Let ( [
-					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-					$~json.at = $~json.at + 1
-				] ;
-					""
-				)
-		) ;
-		/* advance pointer to start of next value */
-		~! = If ( step = 1
-				and IsEmpty ( $json.error )
-				and not ~endFound
-			;
-			/* function:next_with_param_no_result */
-			If ( $~json.ch ≠ "," ;
-				z_jsonParseSupport1 ( 199 /* Error */ ;
-					"Expected , instead of " & $~json.ch ; "" ; "" ; ""
-				) ;
-				Let ( [
-					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-					$~json.at = $~json.at + 1
-				] ;
-					""
-				)
-			)
-			& If ( $~json.ch ≤ " " ;
-				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-			)
-		) ;
-		~cache = If ( step = 1 ;
-			Substitute ( ~key ;
-				[ Char ( 13 ) /* unicode: carriage return (CR) */ ; "" ] ;
-				[ Char ( 10 ) /* unicode: line feed (LF) */ ; "" ] ;
-				[ "|" ; "" ]
-			)
-				& "|" /* TODO: add value type abbreviation: a, o, s, n, w */
-				& "|" & ~keyStartPos
-				& "|" & ~valStartPos
-				& "|" & ~valEndPos
-				& "|" /* TODO: hash if value is an object or array */
-		) ;
-		res = If ( step = 1 ;
-			Case (
-				functionId = 220 ; /* ParseObjectFindEnd */
-				"" ;
-				
-				functionId = 221 ; /* ParseObjectFindValue */
-				If (
-					~valueFound ;
-					~cache
-				) ;
-				
-				functionId = 222 ; /* ParseObjectGetKeyList */
-				List ( res ; ~key ) ;
-			) ;
-			res
-		) ;
-		/* logging start disabled
-		~! = If ( step = 1 ;
-			LogWriterMemoryCreateEntry (
-				"ParseObject main"
-				& " [functionId:" & functionId & "]"
-				& " [uuid:" & uuid & "]"
-				& " [req:" & req & "]"
-				& " [private:" & private & "]"
-				& " [res:" & res & "]"
-				& " [step:" & step & "]"
-				& " [~key:" & ~key & "]"
-				& " [~valueFound:" & ~valueFound & "]"
-				& " [~endFound:" & ~endFound & "]"
-			)
-		) ; disabled logging end */
-		step = If ( step = 1 ;
-			If (
-				not IsEmpty ( $json.error )
-					or ~endFound
-					or ~valueFound
-				;
-				2 ;		/* clean-up */
-				step	/* recurse */
-			) ;
-			step
-		) ;
-		
-		/**
-		 ******************************************************
-		 * ELSE: CLEAN-UP
-		 ******************************************************
-		 */
-		res = If ( step = 2 ;
-			If ( not IsEmpty ( $json.error ) ;
-				"?" ;
-				res
-			) ;
-			res
-		)
-		/* logging start disabled
-		; ~! = If ( step = 2 ;
-			LogWriterMemoryCreateEntry (
-				"ParseObject clean-up"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
 				& " [req:" & req & "]"

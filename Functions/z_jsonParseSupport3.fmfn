@@ -32,7 +32,7 @@
 Let ( [
 	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
-		"z_jsonParseSupport3 "
+		"z_jsonParseSupport3"
 			& " [functionId:" & functionId & "]"
 			& " [uuid:" & uuid & "]"
 			& " [req:" & req & "]"

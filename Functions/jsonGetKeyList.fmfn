@@ -33,7 +33,7 @@ Let ( [
 	& Case (
 		/* object */
 		$~json.ch = "{" ;
-		z_jsonParseSupport2 ( 222 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
+		z_jsonParseSupport2 ( 202 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
 		
 		/* array */
 		$~json.ch = "[" ;
