@@ -22,10 +22,52 @@
  * =====================================
  */
 
-If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
-	z_jsonParseSupport1 ( 100 /* ParseValue */ ; "" ; "" ; "" ; "" ) ;
-	If ( IsEmpty ( $json.error ) ;
-		"" ; /* not found */
-		"Error: " & $json.error
+Let ( [
+	~cache = z_jsonParseSupport1 ( 110 /* GetValuePosition */ ; json ; keyOrIndex ; "" ; "" )
+] ;
+	Case (
+		not IsEmpty ( $json.error ) ;
+		"Error: " & $json.error ;
+		
+		/**
+		 * value was found
+		 */
+		~cache ;
+		Let ( [
+			~cacheAsList = Substitute ( ~cache ; "|" ; ¶ ) ;
+			~valStartPos = GetValue ( ~cacheAsList ; 4 ) ;
+			~valEndPos = GetValue ( ~cacheAsList ; 5 ) ;
+			$~json.text = Middle ( json ; ~valStartPos ; ~valEndPos - ~valStartPos + 1 ) ;
+			$~json.ch = Left ( $~json.text ; 1 ) ;
+			$~json.at = 2 ;
+			~result = Case (
+				$~json.ch = "{" or $~json.ch = "[" ;
+				$~json.text ;
+				
+				$~json.ch = "\"" ;
+				z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+				
+				$~json.ch = "-"
+					or (
+						$~json.ch ≥ 0
+						and $~json.ch ≤ 9
+					)
+				;
+				GetAsNumber ( $~json.text ) ;
+				
+				/* else */
+				z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
+			) ;
+			$~json.text = "" ;
+			$~json.ch = "" ;
+			$~json.at = ""
+		] ;
+			~result
+		) ;
+		
+		/**
+		 * else: value was NOT found
+		 */
+		""
 	)
 )

@@ -43,8 +43,8 @@ Let ( [
 		z_jsonParseSupport1 ( 199 /* Error */ ;
 			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected." ; "" ; "" ; ""
 		)
-		& "Error: "
-		& $json.error
+			& "Error: "
+			& $json.error
 	)
 	
 	/* clean-up */

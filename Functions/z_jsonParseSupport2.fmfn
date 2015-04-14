@@ -32,7 +32,7 @@
 Let ( [
 	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
-		"z_jsonParseSupport2 "
+		"z_jsonParseSupport2"
 			& " [functionId:" & functionId & "]"
 			& " [uuid:" & uuid & "]"
 			& " [req:" & req & "]"
@@ -165,11 +165,16 @@ Case (
 			;
 			~key = req
 		) ;
+		~valStartPos = If ( step = 1 ;
+			$~json.at - 1
+		) ;
 		~! = If ( step = 1
 				and IsEmpty ( $json.error )
-				and not ~valueFound
 			;
 			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
+		) ;
+		~valEndPos = If ( step = 1 ;
+			$~json.at - 2
 		) ;
 		~! = If ( step = 1
 				and $~json.ch ≤ " "
@@ -179,7 +184,6 @@ Case (
 		/* check if at end of array */
 		~endFound = If ( step = 1
 				and IsEmpty ( $json.error )
-				and not ~valueFound
 				and $~json.ch = "]"
 			;
 			True &
@@ -195,7 +199,6 @@ Case (
 		~! = If ( step = 1
 				and IsEmpty ( $json.error )
 				and not ~endFound
-				and not ~valueFound
 			;
 			/* function:next_with_param_no_result */
 			If ( $~json.ch ≠ "," ;
@@ -213,15 +216,23 @@ Case (
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			)
 		) ;
+		~cache = If ( step = 1 ;
+			~key
+				& "|" /* TODO: add value type abbreviation: a, o, s, n, w */
+				& "|" /* array does not have a key start position */
+				& "|" & ~valStartPos
+				& "|" & ~valEndPos
+				& "|" /* TODO: hash if value is an object or array */
+		) ;
 		res = If ( step = 1 ;
 			Case (
 				functionId = 210 ; /* ParseArrayFindEnd */
 				"" ;
 				
 				functionId = 211 ; /* ParseArrayFindValue */
-				Case (
-					~valueFound ; 	True ;
-					~endFound ; 	False
+				If (
+					~valueFound ;
+					~cache
 				) ;
 				
 				functionId = 212 ; /* ParseArrayGetKeyList */
@@ -310,7 +321,7 @@ Case (
 	 *
 	 * returns:
 	 *		ParseObjectFindEnd: Empty string.
-	 *		ParseObjectFindValue: Boolean True if value is found, False if it isn't or if Error.
+	 *		ParseObjectFindValue: Cache data if value is found, empty if it isn't.
 	 *		ParseObjectGetKeyList: A list of top-level keys in an object.
 	 * =====================================================================
 	 */
@@ -400,6 +411,9 @@ Case (
 		 * STEP 1: MAIN
 		 ******************************************************
 		 */
+		~keyStartPos = If ( step = 1 ;
+			$~json.at - 1
+		) ;
 		~key = If ( step = 1 ;
 			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" )
 		) ;
@@ -432,22 +446,25 @@ Case (
 			;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
+		~valStartPos = If ( step = 1 ;
+			$~json.at - 1
+		) ;
 		~! = If ( step = 1
 				and IsEmpty ( $json.error )
-				and not ~valueFound
 			;
 			z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" )
 		) ;
+		~valEndPos = If ( step = 1 ;
+			$~json.at - 2
+		) ;
 		~! = If ( step = 1
 				and $~json.ch ≤ " "
-				and not ~valueFound
 			;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
 		/* check if at end of object */
 		~endFound = If ( step = 1
 				and IsEmpty ( $json.error )
-				and not ~valueFound
 				and $~json.ch = "}"
 			;
 			True &
@@ -463,7 +480,6 @@ Case (
 		~! = If ( step = 1
 				and IsEmpty ( $json.error )
 				and not ~endFound
-				and not ~valueFound
 			;
 			/* function:next_with_param_no_result */
 			If ( $~json.ch ≠ "," ;
@@ -481,15 +497,27 @@ Case (
 				z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 			)
 		) ;
+		~cache = If ( step = 1 ;
+			Substitute ( ~key ;
+				[ Char ( 13 ) /* unicode: carriage return (CR) */ ; "" ] ;
+				[ Char ( 10 ) /* unicode: line feed (LF) */ ; "" ] ;
+				[ "|" ; "" ]
+			)
+				& "|" /* TODO: add value type abbreviation: a, o, s, n, w */
+				& "|" & ~keyStartPos
+				& "|" & ~valStartPos
+				& "|" & ~valEndPos
+				& "|" /* TODO: hash if value is an object or array */
+		) ;
 		res = If ( step = 1 ;
 			Case (
 				functionId = 220 ; /* ParseObjectFindEnd */
 				"" ;
 				
 				functionId = 221 ; /* ParseObjectFindValue */
-				Case (
-					~valueFound ; 	True ;
-					~endFound ; 	False
+				If (
+					~valueFound ;
+					~cache
 				) ;
 				
 				functionId = 222 ; /* ParseObjectGetKeyList */

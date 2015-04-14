@@ -10,7 +10,7 @@
  *		functionId = numeric code for function to run, in range of 100 - 199
  *			100		ParseValue
  *			101		ParseValueSkip
- *			110		FindValue
+ *			110		GetValuePosition
  *			120		GetEndPosition
  *			121		IsEmpty
  *			199		Error
@@ -124,7 +124,7 @@ Case (
 	functionId = 110 ;
 	/**
 	 * =====================================================================
-	 * FindValue
+	 * GetValuePosition
 	 * 
 	 * Find the starting position of a value.
 	 *
@@ -140,7 +140,7 @@ Case (
 	Let ( [
 		/* initialize parsing variables */
 		$~json.text = req ;
-		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+		$~json.ch = Left ( $~json.text ; 1 ) ;
 		$~json.at = 2 ;
 		$json.error = "" ;
 		~! = If ( $~json.ch ≤ " " ;
@@ -159,22 +159,15 @@ Case (
 			/* else: string, number, or word */
 			False
 				& z_jsonParseSupport1 ( 199 /* Error */ ;
-					"value sent to ~jsonFindValue function was a string, number, or word. An object or array was expected."
+					"value sent to GetValuePosition function was not an object or array"
 				)
 		)
 		
-		/* clean-up */
+		/* clean-up parsing variables */
 		& Let ( [
-			$json.error = $json.error
-			/* TODO: enable for production use
-				actually, as currently implemented, this function can't clear these
-				values because calling functions are using them.
-				So, any function that calls this one needs to clear these values.
-			; $json.error = ""
+			$~json.text = "" ;
 			$~json.ch = "" ;
-			$~json.at = 1 ;
-			$~json.text = json
-			*/
+			$~json.at = ""
 		] ;
 			""
 		)
@@ -191,7 +184,7 @@ Case (
 	 * 		Position of last non-whitespace character in the json.
 	 *
 	 * parameters:
-	 *		req = not used
+	 *		req = json
 	 *		private = current character
 	 *		res = current position
 	 *
@@ -207,19 +200,19 @@ Case (
 			private
 		) ;
 		~at = If ( not step ;
-			Length ( $~json.text ) ;
+			Length ( req ) ;
 			res
 		) ;
 		
-		~ch = Middle ( $~json.text ; ~at ; 1 ) ;
+		~ch = Middle ( req ; ~at ; 1 ) ;
 		~at = ~at - 1 ;
 		~endFound =
 			~ch = "}"
 			or ~ch = "]"
 	] ;
 		If ( ~endFound ;
-			~at ;
-			z_jsonParseSupport1 ( 120 /* GetEndPosition */ ; "" ; ~ch ; ~at ; 1 )
+			~at + 1 ;
+			z_jsonParseSupport1 ( 120 /* GetEndPosition */ ; req ; ~ch ; ~at ; 1 )
 		)
 	) ;
 	
@@ -233,7 +226,7 @@ Case (
 	 * Determine if the json is empty: {} or [] (potentially with whitespace)
 	 *
 	 * parameters:
-	 *		req = not used
+	 *		req = json
 	 *		private = not used
 	 *
 	 * returns:
@@ -242,30 +235,37 @@ Case (
 	 */
 	Let ( [
 		/* initialize parsing variables */
-		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+		$~json.text = req ;
+		$~json.ch = Left ( $~json.text ; 1 ) ;
 		$~json.at = 2 ;
+		
 		~! = If ( $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
+		
 		~! = If ( $~json.ch ≠ "{" and $~json.ch ≠ "[" ;
 			z_jsonParseSupport1 ( 199 /* Error */ ;
-				"json was a string, number, or word. An object or array was expected. Occurred in IsEmpty function." ; "" ; "" ; ""
+				"json was not an object or array as expected. Occurred in IsEmpty function." ; "" ; "" ; ""
 			)
 		) ;
-		~! = /* function:next_no_result */
-			Let ( [
-				$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
-				$~json.at = $~json.at + 1
-			] ;
-				""
-			)
-		;
+		
+		/* function:next_no_result */
+		$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+		$~json.at = $~json.at + 1 ;
+		
 		~! = If ( $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-		)
+		) ;
+		
+		~ch = $~json.ch ;
+		
+		/* clean-up parsing variables */
+		$~json.text = "" ;
+		$~json.ch = "" ;
+		$~json.at = ""
 	] ;
 		If ( IsEmpty ( $json.error ) ;
-			$~json.ch = "}" or $~json.ch = "]"
+			~ch = "}" or ~ch = "]"
 		)
 	) ;
 	
