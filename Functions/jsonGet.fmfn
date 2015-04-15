@@ -62,7 +62,8 @@ Let ( [
 			/* clean-up parsing variables */
 			$~json.text = "" ;
 			$~json.ch = "" ;
-			$~json.at = ""
+			$~json.at = "" ;
+			$~json.depth = ""
 		] ;
 			~result
 		) ;

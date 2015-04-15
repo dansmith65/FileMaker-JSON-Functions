@@ -7,12 +7,12 @@ List of functionId's sent to the z_jsonParseSupport functions to identify the se
 - 121	IsEmpty
 - 199	Error
 
+- 200	ParseObjectFindEnd
+- 201	ParseObjectFindValue
+- 202	ParseObjectGetKeyList
 - 210	ParseArrayFindEnd
 - 211	ParseArrayFindValue
 - 212	ParseArrayGetKeyList
-- 220	ParseObjectFindEnd
-- 221	ParseObjectFindValue
-- 222	ParseObjectGetKeyList
 
 - 300	ParseWhitespace
 - 310	ParseString

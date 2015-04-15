@@ -28,7 +28,7 @@
  * =====================================
  */
 
-/* logging start disabled
+/* logging start */
 Let ( [
 	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
@@ -41,11 +41,13 @@ Let ( [
 			& " [step:" & step & "]"
 	)
 ] ;
-disabled logging end */
+/* logging end */
 Case (
 	
 	
-	functionId = 100 or functionId = 101 ;
+	functionId = 100 /* ParseValue */
+		or functionId = 101 /* ParseValueSkip */
+	;
 	/**
 	 * =====================================================================
 	 * ParseValue / ParseValueSkip
@@ -66,14 +68,27 @@ Case (
 		~! = If ( $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
-		res = Case (
-			/* OBJECT */
-			$~json.ch = "{" ;
+		~valueType = Case (
+			$~json.ch = "{" ;	"o" ;
+			$~json.ch = "[" ;	"a" ;
+			$~json.ch = "\"" ;	"s" ;
+			$~json.ch = "-" or ( $~json.ch ≥ 0 and $~json.ch ≤ 9 ) ;		"n" ;
+			/* else: assume word */
+			"w"
+		)
+	] ;
+		/* TODO: don't return a result if ParseValueSkip */
+		Case (
+			~valueType = "o" or ~valueType = "a" ;
 			Let ( [
 				~start = $~json.at - 1 ;
-				~! = z_jsonParseSupport2 ( 200 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
+				~! = If ( ~valueType = "o" ;
+					z_jsonParseSupport2 ( 200 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
+					z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" )
+				) ;
 				~end =  $~json.at
 			] ;
+				/* TODO: don't extract the value if ParseValueSkip */
 				If ( IsEmpty ( $json.error ) ;
 					Middle (
 						$~json.text ;
@@ -84,39 +99,15 @@ Case (
 				)
 			) ;
 			
-			/* ARRAY */
-			$~json.ch = "[" ;
-			Let ( [
-				~start = $~json.at - 1 ;
-				~! = z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" ) ;
-				~end =  $~json.at
-			] ;
-				If ( IsEmpty ( $json.error ) ;
-					Middle (
-						$~json.text ;
-						~start ;
-						~end - ~start - 1
-					) ;
-					"?"
-				)
-			) ;
-			
-			$~json.ch = "\"" ;
+			~valueType = "s" ;
 			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
 			
-			$~json.ch = "-"
-				or (
-					$~json.ch ≥ 0
-					and $~json.ch ≤ 9
-				)
-			;
+			~valueType = "n" ;
 			z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
 			
 			/* else */
 			z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
 		)
-	] ;
-		res
 	) ;
 	
 	
@@ -143,6 +134,122 @@ Case (
 		$~json.ch = Left ( $~json.text ; 1 ) ;
 		$~json.at = 2 ;
 		$json.error = "" ;
+		
+		/**
+		 * initialize cache
+		 *
+		 *	$json.config.cache.enabled		If true, cache will not be used.
+		 *						Will automatically be set to true on FileMaker 12.
+		 *
+		 *	$json.config.cache.maxdepth			Maximum number of nested objects/arrays to cache.
+		 *
+		 *	$~json.depth		how many objects/arrays are above the current set of values
+		 *						this is incremented for every new sub-object/array
+		 *
+		 *	$~json.cache.hash	ordered list of MD5 hashes of json objects/arrays
+		 *
+		 *	$~json.cache.data	ordered list of Quote()'ed cache data that corresponds with
+		 *						the hash in the same position in it's list
+		 *
+		 *	$~json.cache[n]		cache data for nth depth of the json in $~json.text, which
+		 *						is currently being processed. Once an entire object/array
+		 *						is cached, it is quoted and stored in $~json.cache.data.
+		 *						
+		 *						keyOrIndexName|keyStartPos|valueType|valueStartPos|valueEndPos|hash¶
+		 *								
+		 *							keyOrIndexName		with CR, LF and | removed
+		 *							keyStartPos			position of the first character of an object
+		 *												property name. empty if an array
+		 *							valueType			json data type abbreviation: a,o,s,n,w
+		 *												I'm still not sure if I need this.
+		 *							valueStartPos		position of the first character of the value
+		 *							valueEndPos			position of the last character of the value
+		 *							hash				if an object or array, the MD5 hash of it
+		 *												used to find the cache for this object/array
+		 *							lastAt				position of last parsed character
+		 *							
+		 *							all position values are an offset from the starting position of the
+		 *							current object/array
+		 *							
+		 *							last value has these nuances:
+		 *								- if the entire object/array is cached, will start with:
+		 *									"|done|"
+		 *									TODO: I think I'll want to add more information to this line, but I'm not sure what yet.
+		 *									NOTE: starting with | prevents collision with an object name
+		 *								- else: will contain data on the last parsed value
+		 *									- if the value was not completely parsed, then the last
+		 *									  value will not be complete, it will end with valueStartPos
+		 *								
+		 *
+		 *	$~json.hash			hash of the current json object. I'm not sure this is needed yet.
+		 *						Once I'm done, search for references to it and decide.
+		 */
+		$json.config.cache.enabled = If ( $json.config.cache.enabled ;
+			$json.config.cache.enabled ;
+			GetAsNumber ( Get ( ApplicationVersion ) ) ≥ 13
+		) ;
+		~! = If ( $json.config.cache.enabled ;
+			Let ( [
+				$json.config.cache.maxdepth = If ( $json.config.cache.maxdepth ;
+					$json.config.cache.maxdepth ;
+					2 /* hard-coded default max depth */
+				) ;
+				~hash = GetContainerAttribute ( $~json.text ; "MD5" ) ;
+				~newJson = If ( $~json.hash ≠ ~hash ;
+					/* accessing different json, so discard the temporary cache data
+					delete all $~json.cache[n] variables, up to $json.config.cache.maxdepth.
+					TODO: This method is temporary: do it properly */
+					Let ( [
+						$~json.cache[1] = "" ;
+						$~json.cache[2] = "" ;
+						$~json.cache[3] = "" ;
+						$~json.cache[4] = "" ;
+						$~json.cache[5] = "" ;
+						$~json.cache[6] = "" ;
+						$~json.cache[7] = "" ;
+						$~json.cache[8] = "" ;
+						$~json.cache[9] = "" ;
+						$~json.cache[10] = ""
+					] ;
+						True
+					)
+				) ;
+				$~json.hash = ~hash ;
+				!~ = If ( ~newJson ;
+					/* check if cache exists for this json */
+					Let ( [
+						~hashPosition = Position ( $~json.cache.hash ; $~json.hash ; 1 ; 1 ) ;
+						/* NOTE: hard-coded depth of 1 when setting $~json.cache because this function is meant to be called from the top level object only */
+						$~json.cache[1] = If ( ~hashPosition ;
+							/* cache does exists, extract it */
+							Let ( [
+								~leftOfHash = Left ( $~json.cache.hash ; ~hashPosition ) ;
+								~valueNumber = PatternCount ( ~leftOfHash ; ¶ ) ;
+								~data = GetValue ( $~json.cache.data ; ~valueNumber )
+							] ;
+								Evaluate ( ~data )
+							)
+						)
+					] ; "" )
+					/* else: use the data already in temporary cache variables */
+				) ;
+				/* object/array walking functions increment/decrement this value on every iteration, so setting it to 0 here causes it to start at 1 on the first value */
+				$~json.depth = 0
+				/* logging start */
+				; ~! = LogWriterMemoryCreateEntry (
+					"GetValuePosition: initialize cache"
+					& " [functionId:" & functionId & "]"
+					& " [uuid:" & uuid & "]"
+					& " [req:" & req & "]"
+					& " [private:" & private & "]"
+					& " [res:" & res & "]"
+					& " [step:" & step & "]"
+					& "¶[$~json.cache[1]:" & $~json.cache[1] & "]"
+					& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
+					& "¶[$~json.cache.data:" & $~json.cache.data & "]"
+				) /* logging end */
+			] ; "" )
+		) ;
 		~! = If ( $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		)
@@ -167,7 +274,21 @@ Case (
 		& Let ( [
 			$~json.text = "" ;
 			$~json.ch = "" ;
-			$~json.at = ""
+			$~json.at = "" ;
+			$~json.depth = ""
+			/* logging start */
+			; ~! = LogWriterMemoryCreateEntry (
+				"GetValuePosition: end"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [req:" & req & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& "¶[$~json.cache[1]:" & $~json.cache[1] & "]"
+				& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
+				& "¶[$~json.cache.data:" & $~json.cache.data & "]"
+			) /* logging end */
 		] ;
 			""
 		)
@@ -262,7 +383,8 @@ Case (
 		/* clean-up parsing variables */
 		$~json.text = "" ;
 		$~json.ch = "" ;
-		$~json.at = ""
+		$~json.at = "" ;
+		$~json.depth = ""
 	] ;
 		If ( IsEmpty ( $json.error ) ;
 			~ch = "}" or ~ch = "]"
@@ -326,6 +448,6 @@ Case (
 	)
 )
 
-/* logging start disabled
+/* logging start */
 )
-disabled logging end */
+/* logging end */
