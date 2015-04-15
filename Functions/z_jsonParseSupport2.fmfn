@@ -71,6 +71,12 @@ Case (
 	 * =====================================================================
 	 */
 	Let ( [
+		~cache.enabled = If ( $json.config.cache.enabled
+				and $~json.depth ≤ $json.config.cache.maxdepth
+			;
+			True
+		) ;
+		
 		/**
 		 ******************************************************
 		 * STEP 0: SET-UP
@@ -84,12 +90,6 @@ Case (
 		$~json.depth = If ( step < 1 ;
 			$~json.depth + 1 ;
 			$~json.depth
-		) ;
-		~cache.enabled = If ( step < 1
-				and $json.config.cache.enabled
-				and $~json.depth ≤ $json.config.cache.maxdepth
-			;
-			True
 		) ;
 		
 		/* READ CACHE */
@@ -106,8 +106,7 @@ Case (
 					& " [private:" & private & "]"
 					& " [res:" & res & "]"
 					& " [step:" & step & "]"
-					& " [$~json.depth:" & $~json.depth & "]"
-					& " [$~json.cache[$~json.depth]:" & $~json.cache[$~json.depth] & "]"
+					& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
 			) & /* logging end */
 			Case (
 				functionId = 201 /* ParseObjectFindValue */ ;
@@ -156,6 +155,7 @@ Case (
 				] ;
 					Case (
 						/* key found in cache */
+						/* TODO: do I need to update the value of $~json.at and $~json.ch ? */
 						~cachePosStart ;
 						Let ( [
 							/* cache stores position as an offset from the start of the object, undo that offset so the position is based on the offset from the start of the entire json string */
@@ -237,6 +237,17 @@ Case (
 			) ;
 			/* else */
 			step
+				/* logging start */
+				& LogWriterMemoryCreateEntry (
+					"ParseObject cache: read: not found"
+						& " [functionId:" & functionId & "]"
+						& " [uuid:" & uuid & "]"
+						& " [req:" & req & "]"
+						& " [private:" & private & "]"
+						& " [res:" & res & "]"
+						& " [step:" & step & "]"
+						& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
+				) /* logging end */
 		) ;
 		
 		/* pass data up from above calculations to a root-level let variable */
@@ -430,6 +441,17 @@ Case (
 				and IsEmpty ( $json.error )
 				and ~cache.enabled
 			;
+			/* logging start */
+			LogWriterMemoryCreateEntry (
+				"ParseObject main: add value to cache"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [req:" & req & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
+			) & /* logging end */
 			List ( $~json.cache[$~json.depth] ;
 				Substitute ( ~key ; [Char(13);""] ; [Char(10);""] ; ["|";""] )
 					& "|" & ~keyStartPos - ~startPos + 1
@@ -439,8 +461,21 @@ Case (
 					& "|" & /* hash */ If ( ~valueType = "o" or ~valueType = "a" ;
 						GetContainerAttribute ( ~value ; "MD5" )
 					)
-					& "|" & $~json.at - ~startPos
-			)
+					& "|" & $~json.at - ~startPos - If ( ~endFound ; 1 )
+			) ;
+			/* logging start */
+			LogWriterMemoryCreateEntry (
+				"ParseObject main: value NOT added to cache"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [req:" & req & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [~cache.enabled:" & ~cache.enabled & "]"
+				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
+			) & /* logging end */
+			$~json.cache[$~json.depth]
 		) ;
 		
 		res = If ( step = 1 ;
@@ -481,7 +516,7 @@ Case (
 				& " [~valueType:" & ~valueType & "]"
 				& " [~valStartPos:" & ~valStartPos & "]"
 				& " [~valEndPos:" & ~valEndPos & "]"
-				& " [$~json.cache[$~json.depth]:" & $~json.cache[$~json.depth] & "]"
+				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
 			)
 		) ; /* logging end */
 		
@@ -513,16 +548,20 @@ Case (
 		~! = If ( step = 2
 				and IsEmpty ( $json.error )
 				and ~cache.enabled
+				and ~endFound
 			;
 			Let ( [
-				~value = Middle ( $~json.text ; ~startPos ; $~json.at - ~startPos ) ;
+				~value = Middle ( $~json.text ; ~startPos ; $~json.at - ~startPos - 1 ) ;
 				~hash = GetContainerAttribute ( ~value ; "MD5" ) ;
+				/* logging start */
+				~! = LogWriterMemoryCreateEntry (
+					"ParseObject clean-up"
+					& " [functionId:" & functionId & "]"
+					& " [value:" & ~value & "]"
+					& " [hash:" & ~hash & "]"
+				) ; /* logging end */
 				$~json.cache.hash = List ( $~json.cache.hash ; ~hash ) ;
-				/* TODO: only append done if end of object has been found */
-				$~json.cache[$~json.depth] = If ( ~endFound ;
-					List ( $~json.cache[$~json.depth] ; "|done|" ) ;
-					$~json.cache[$~json.depth]
-				) ;
+				$~json.cache[$~json.depth] = List ( $~json.cache[$~json.depth] ; "|done|" ) ;
 				~data = Quote ( $~json.cache[$~json.depth] ) ;
 				$~json.cache.data = List ( $~json.cache.data ; ~data )
 			] ; "" )
@@ -540,8 +579,8 @@ Case (
 				& " [~key:" & ~key & "]"
 				& " [~valueFound:" & ~valueFound & "]"
 				& " [~endFound:" & ~endFound & "]"
-				& " [$~json.depth:" & $~json.depth & "]"
-				& "¶[$~json.cache[$~json.depth]:" & $~json.cache[$~json.depth] & "]"
+				& " [~startPos:" & ~startPos & "]"
+				& "¶[$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
 				& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
 				& "¶[$~json.cache.data:" & $~json.cache.data & "]"
 			)
@@ -552,7 +591,7 @@ Case (
 		)
 	] ;
 		If ( step = 1 ;
-			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step ) ;
+			z_jsonParseSupport2 ( functionId ; req ; ~startPos ; res ; step ) ;
 			res
 		)
 	) ;
