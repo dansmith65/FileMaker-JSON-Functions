@@ -60,7 +60,9 @@ Case (
 	 *
 	 * parameters:
 	 *		req = key to find for ParseObjectFindValue, not used for others
-	 *		private = starting position of this object
+	 *		private = value list:
+	 *			1 = starting position of this object
+	 *			2 = current array index
 	 *
 	 * returns:
 	 *		ParseObjectFindEnd: Empty string.
@@ -69,11 +71,23 @@ Case (
 	 * =====================================================================
 	 */
 	Let ( [
+		/**
+		 * local vars used by any/all sections
+		 */
 		~cache.enabled = If ( $json.config.cache.enabled
 				and $~json.depth ≤ $json.config.cache.maxdepth
 			;
 			True
 		) ;
+		/* extract index from private, increment it, then put it back into private */
+		~index = GetValue ( private ; 2 ) ;
+		~index = If ( IsEmpty ( ~index ) ; 0 ; GetAsNumber ( ~index ) + 1 ) ;
+		private = List (
+			GetValue ( private ; 1 ) ;
+			~index
+		) ;
+		~isObject = functionId < 210 ;
+		~isArray = functionId = 210 or functionId = 211 or functionId = 212 ;
 		
 		/**
 		 ******************************************************
@@ -83,6 +97,14 @@ Case (
 		/* save the starting position of this object */
 		~startPos = If ( step < 1 ;
 			$~json.at - 1 ;
+			GetAsNumber ( GetValue ( private ; 1 ) )
+		) ;
+		private = If ( step < 1 ;
+			/* save the starting position back into the private variable, which is sent to recursive calls to this function */
+			List (
+				~startPos ;
+				GetValue ( private ; 2 )
+			) ;
 			private
 		) ;
 		$~json.depth = If ( step < 1 ;
@@ -237,7 +259,7 @@ Case (
 			step
 		) ;
 		
-		/* pass data up from above calculations to a root-level let variable */
+		/* pass data up from above cache calculations to a root-level let variable */
 		res = If ( ~cache.enabled and not IsEmpty ( $res ) ;
 			Let ( [ res = $res ; $res = "" ] ; res ) ;
 			res
@@ -246,9 +268,9 @@ Case (
 		
 		~! = If ( step < 1 ;
 			/* function:next_with_param_no_result */
-			If ( $~json.ch ≠ "{" ;
+			If ( $~json.ch ≠ If ( ~isObject ; "{" ; "[" ) ;
 				z_jsonParseSupport1 ( 199 /* Error */ ;
-					"Pointer was not at start of an object" ; "" ; "" ; ""
+					"Pointer was not at start of structure" ; "" ; "" ; ""
 				) ;
 				Let ( [
 					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
@@ -266,7 +288,7 @@ Case (
 		/* check if object is empty */
 		~endFound = If ( step < 1
 				and IsEmpty ( $json.error )
-				and $~json.ch = "}"
+				and $~json.ch = If ( ~isObject ; "}" ; "]" )
 			;
 			True &
 				/* function:next_no_result */
@@ -279,7 +301,9 @@ Case (
 		) ;
 		res = If ( step < 1 ;
 			Case (
-				functionId = 200 ; /* ParseObjectFindEnd */
+				functionId = 200 /* ParseObjectFindEnd */
+					or functionId = 210 /* ParseArrayFindEnd */
+				;
 				"" ;
 				
 				functionId = 201 ; /* ParseObjectFindValue */
@@ -289,7 +313,17 @@ Case (
 					False
 				) ;
 				
-				functionId = 202 ; /* ParseObjectGetKeyList */
+				functionId = 211 ; /* ParseArrayFindValue */
+				/* index values start at 0, so anything lower is invalid */
+				If ( req < 0
+						or ~endFound
+					;
+					False
+				) ;
+				
+				functionId = 202  /* ParseObjectGetKeyList */
+					or functionId = 212  /* ParseArrayGetKeyList */
+				;
 				""
 			) ;
 			res
@@ -578,7 +612,7 @@ Case (
 		)
 	] ;
 		If ( step = 1 ;
-			z_jsonParseSupport2 ( functionId ; req ; ~startPos ; res ; step ) ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step ) ;
 			res
 		)
 	) ;
