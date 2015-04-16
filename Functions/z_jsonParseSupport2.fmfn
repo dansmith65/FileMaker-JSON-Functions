@@ -58,8 +58,6 @@ Case (
 	 * ParseObjectFindValue: Move pointer to the start of the value for a specified key.
 	 * ParseObjectGetKeyList: Get a list of top-level keys in an object.
 	 *
-	 *	TODO: should I add a function that returns the value? That could make the jsonGet function much simpler.
-	 *
 	 * parameters:
 	 *		req = key to find for ParseObjectFindValue, not used for others
 	 *		private = starting position of this object
@@ -112,7 +110,7 @@ Case (
 				functionId = 201 /* ParseObjectFindValue */ ;
 				Let ( [
 					~lastEntry = RightValues ( $~json.cache[$~json.depth] ; 1 ) ;
-					~cacheIsComplete = Left ( ~lastEntry ; 6 ) = "|done|" ;
+					~cacheIsComplete = Left ( ~lastEntry ; 6 ) = "|DONE|" ;
 					/**
 					 * search cache for the key
 					 * am surrounding the name with the record and column separator characters so
@@ -561,7 +559,7 @@ Case (
 					& " [hash:" & ~hash & "]"
 				) ; /* logging end */
 				$~json.cache.hash = List ( $~json.cache.hash ; ~hash ) ;
-				$~json.cache[$~json.depth] = List ( $~json.cache[$~json.depth] ; "|done|" ) ;
+				$~json.cache[$~json.depth] = List ( $~json.cache[$~json.depth] ; "|DONE|" ) ;
 				~data = Quote ( $~json.cache[$~json.depth] ) ;
 				$~json.cache.data = List ( $~json.cache.data ; ~data )
 			] ; "" )

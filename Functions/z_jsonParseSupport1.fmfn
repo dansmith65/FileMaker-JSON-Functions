@@ -173,7 +173,7 @@ Case (
 		 *							
 		 *							last value has these nuances:
 		 *								- if the entire object/array is cached, will start with:
-		 *									"|done|"
+		 *									"|DONE|"
 		 *									TODO: I think I'll want to add more information to this line, but I'm not sure what yet.
 		 *									NOTE: starting with | prevents collision with an object name
 		 *								- else: will contain data on the last parsed value
@@ -184,15 +184,16 @@ Case (
 		 *	$~json.hash			hash of the current json object. I'm not sure this is needed yet.
 		 *						Once I'm done, search for references to it and decide.
 		 */
-		$json.config.cache.enabled = If ( $json.config.cache.enabled ;
-			$json.config.cache.enabled ;
+		$json.config.cache.enabled = If ( $json.config.cache.enabled = False ;
+			False ;
+			/* only enable cache if on version 13+ because it creates MD5 hashes via GetContainerAttribute function */
 			GetAsNumber ( Get ( ApplicationVersion ) ) ≥ 13
 		) ;
 		~! = If ( $json.config.cache.enabled ;
 			Let ( [
-				$json.config.cache.maxdepth = If ( $json.config.cache.maxdepth ;
+				$json.config.cache.maxdepth = If ( $json.config.cache.maxdepth ≥ 1 ;
 					$json.config.cache.maxdepth ;
-					2 /* hard-coded default max depth */
+					10 /* hard-coded default max depth */
 				) ;
 				~hash = GetContainerAttribute ( $~json.text ; "MD5" ) ;
 				~newJson = If ( $~json.hash ≠ ~hash ;
@@ -214,6 +215,8 @@ Case (
 						True
 					)
 				) ;
+				/* TODO: I think I need to use this to save the cache for the root-level json, if it's complete or not
+				NOTE: when I do this, I'll need to remove the old cache for this json before adding the new one */
 				$~json.hash = ~hash ;
 				!~ = If ( ~newJson ;
 					/* check if cache exists for this json */
@@ -223,9 +226,24 @@ Case (
 						$~json.cache[1] = If ( ~hashPosition ;
 							/* cache does exists, extract it */
 							Let ( [
-								~leftOfHash = Left ( $~json.cache.hash ; ~hashPosition ) ;
-								~valueNumber = PatternCount ( ~leftOfHash ; ¶ ) ;
+								~leftOfHash = Left ( $~json.cache.hash ; ~hashPosition - 1 ) ;
+								~valueNumber = PatternCount ( ~leftOfHash ; ¶ ) + 1 ;
 								~data = GetValue ( $~json.cache.data ; ~valueNumber )
+								/* logging start */
+								; ~! = LogWriterMemoryCreateEntry (
+									"GetValuePosition: load temp cache from cache.hash"
+									& " [functionId:" & functionId & "]"
+									& " [uuid:" & uuid & "]"
+									& " [req:" & req & "]"
+									& " [private:" & private & "]"
+									& " [res:" & res & "]"
+									& " [step:" & step & "]"
+									& " [~hash:" & ~hash & "]"
+									& " [~hashPosition:" & ~hashPosition & "]"
+									& " [~leftOfHash:" & ~leftOfHash & "]"
+									& " [~valueNumber:" & ~valueNumber & "]"
+									& " [~data:" & ~data & "]"
+								) /* logging end */
 							] ;
 								Evaluate ( ~data )
 							)
@@ -244,6 +262,7 @@ Case (
 					& " [private:" & private & "]"
 					& " [res:" & res & "]"
 					& " [step:" & step & "]"
+					& " [~hash:" & ~hash & "]"
 					& "¶[$~json.cache[1]:" & $~json.cache[1] & "]"
 					& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
 					& "¶[$~json.cache.data:" & $~json.cache.data & "]"
