@@ -91,6 +91,7 @@ Case (
 		) ;
 		
 		/* READ CACHE */
+		/* TODO: once I decide that cache doesn't contain the requested value, I don't want to check cache after reading every value. I'm not certain, but I think that's what's happening now */
 		step = If ( step < 1
 				and ~cache.enabled
 				and not IsEmpty ( $~json.cache[$~json.depth] )
@@ -129,12 +130,16 @@ Case (
 						~cachePosStart
 					) ;
 */
-					~cachePosEnd = Position ( $~json.cache[$~json.depth] & ¶ ; ¶ ; ~cachePosStart ; 1 ) ;
-					~cache = If ( ~cachePosStart ; Middle (
-						$~json.cache[$~json.depth] ;
-						~cachePosStart ;
-						~cachePosEnd - ~cachePosStart
-					) )
+					~cachePosEnd = If ( ~cachePosStart ;
+						Position ( $~json.cache[$~json.depth] & ¶ ; ¶ ; ~cachePosStart ; 1 )
+					) ;
+					~cache = If ( ~cachePosStart ;
+						Middle (
+							$~json.cache[$~json.depth] ;
+							~cachePosStart ;
+							~cachePosEnd - ~cachePosStart
+						)
+					)
 					/* logging start */
 					; ~! = LogWriterMemoryCreateEntry (
 						"ParseObject cache: read: data"
@@ -200,11 +205,10 @@ Case (
 						2 ; /* nextStep: clean-up */
 						
 						/* else: search the object for the value, starting where cache left off */
-						/* TODO: there is another potential scenario here: cache[depth] does not exist, but cache.hash does */
 						Let ( [
-							~length = Length ( ~cache ) ;
-							~lastPipe = Position ( ~cache ; "|" ; ~length ; -1 ) ;
-							~lastAt = Right ( ~cache ; ~length - ~lastPipe ) ;
+							~length = Length ( ~lastEntry ) ;
+							~lastPipe = Position ( ~lastEntry ; "|" ; ~length ; -1 ) ;
+							~lastAt = Right ( ~lastEntry ; ~length - ~lastPipe ) ;
 							$~json.at = GetAsNumber ( ~lastAt ) + ~startPos ;
 							$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 ) ;
 							~nextStep = 1 /* main */
@@ -217,7 +221,10 @@ Case (
 									& " [private:" & private & "]"
 									& " [res:" & res & "]"
 									& " [step:" & step & "]"
-									& " [~cache:" & ~cache & "]"
+									& " [~lastEntry:" & ~lastEntry & "]"
+									& " [~length:" & ~length & "]"
+									& " [~lastPipe:" & ~lastPipe & "]"
+									& " [~lastAt:" & ~lastAt & "]"
 									& " [~nextStep:" & ~nextStep & "]"
 							) /* logging end */
 						] ;
@@ -230,6 +237,9 @@ Case (
 								~nextStep
 							)
 						)
+						/* TODO: there is another potential scenario here: cache[depth] does not exist, but cache.hash does
+						Isn't cache[depth] loaded by the calling function now?
+						*/
 					)
 				)
 			) ;
@@ -441,7 +451,7 @@ Case (
 			;
 			/* logging start */
 			LogWriterMemoryCreateEntry (
-				"ParseObject main: add value to cache"
+				"ParseObject main: before adding value to cache"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
 				& " [req:" & req & "]"

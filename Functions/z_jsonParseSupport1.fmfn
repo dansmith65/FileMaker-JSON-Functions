@@ -151,11 +151,11 @@ Case (
 		 *	$~json.cache.data	ordered list of Quote()'ed cache data that corresponds with
 		 *						the hash in the same position in it's list
 		 *
-		 *	$~json.cache[n]		cache data for nth depth of the json in $~json.text, which
-		 *						is currently being processed. Once an entire object/array
+		 *	$~json.cache[n]		temporary cache data for nth depth of the json in $~json.text,
+		 *						which is currently being processed. Once an entire object/array
 		 *						is cached, it is quoted and stored in $~json.cache.data.
 		 *						
-		 *						keyOrIndexName|keyStartPos|valueType|valueStartPos|valueEndPos|hash¶
+		 *						keyOrIndexName|keyStartPos|valueType|valueStartPos|valueEndPos|hash|lastAt¶
 		 *								
 		 *							keyOrIndexName		with CR, LF and | removed
 		 *							keyStartPos			position of the first character of an object
@@ -181,8 +181,7 @@ Case (
 		 *									  value will not be complete, it will end with valueStartPos
 		 *								
 		 *
-		 *	$~json.hash			hash of the current json object. I'm not sure this is needed yet.
-		 *						Once I'm done, search for references to it and decide.
+		 *	$~json.hash			hash of the json object that temporary cache is associated with
 		 */
 		$json.config.cache.enabled = If ( $json.config.cache.enabled = False ;
 			False ;
@@ -196,66 +195,15 @@ Case (
 					10 /* hard-coded default max depth */
 				) ;
 				~hash = GetContainerAttribute ( $~json.text ; "MD5" ) ;
-				~newJson = If ( $~json.hash ≠ ~hash ;
-					/* accessing different json, so discard the temporary cache data
-					delete all $~json.cache[n] variables, up to $json.config.cache.maxdepth.
-					TODO: This method is temporary: do it properly */
-					Let ( [
-						$~json.cache[1] = "" ;
-						$~json.cache[2] = "" ;
-						$~json.cache[3] = "" ;
-						$~json.cache[4] = "" ;
-						$~json.cache[5] = "" ;
-						$~json.cache[6] = "" ;
-						$~json.cache[7] = "" ;
-						$~json.cache[8] = "" ;
-						$~json.cache[9] = "" ;
-						$~json.cache[10] = ""
-					] ;
-						True
-					)
+				~isNewJson = ~hash ≠ $~json.hash ; /* current json is different than last json accessed while caching was enabled */
+				/* check if hash exists for previously accessed json */
+				~hashPosition = If ( ~isNewJson ;
+					Position ( $~json.cache.hash ; $~json.hash ; 1 ; 1 )
 				) ;
-				/* TODO: I think I need to use this to save the cache for the root-level json, if it's complete or not
-				NOTE: when I do this, I'll need to remove the old cache for this json before adding the new one */
-				$~json.hash = ~hash ;
-				!~ = If ( ~newJson ;
-					/* check if cache exists for this json */
-					Let ( [
-						~hashPosition = Position ( $~json.cache.hash ; $~json.hash ; 1 ; 1 ) ;
-						/* NOTE: hard-coded depth of 1 when setting $~json.cache because this function is meant to be called from the top level object only */
-						$~json.cache[1] = If ( ~hashPosition ;
-							/* cache does exists, extract it */
-							Let ( [
-								~leftOfHash = Left ( $~json.cache.hash ; ~hashPosition - 1 ) ;
-								~valueNumber = PatternCount ( ~leftOfHash ; ¶ ) + 1 ;
-								~data = GetValue ( $~json.cache.data ; ~valueNumber )
-								/* logging start */
-								; ~! = LogWriterMemoryCreateEntry (
-									"GetValuePosition: load temp cache from cache.hash"
-									& " [functionId:" & functionId & "]"
-									& " [uuid:" & uuid & "]"
-									& " [req:" & req & "]"
-									& " [private:" & private & "]"
-									& " [res:" & res & "]"
-									& " [step:" & step & "]"
-									& " [~hash:" & ~hash & "]"
-									& " [~hashPosition:" & ~hashPosition & "]"
-									& " [~leftOfHash:" & ~leftOfHash & "]"
-									& " [~valueNumber:" & ~valueNumber & "]"
-									& " [~data:" & ~data & "]"
-								) /* logging end */
-							] ;
-								Evaluate ( ~data )
-							)
-						)
-					] ; "" )
-					/* else: use the data already in temporary cache variables */
-				) ;
-				/* object/array walking functions increment/decrement this value on every iteration, so setting it to 0 here causes it to start at 1 on the first value */
-				$~json.depth = 0
+				
 				/* logging start */
-				; ~! = LogWriterMemoryCreateEntry (
-					"GetValuePosition: initialize cache"
+				~! = LogWriterMemoryCreateEntry (
+					"GetValuePosition: initialize cache: start"
 					& " [functionId:" & functionId & "]"
 					& " [uuid:" & uuid & "]"
 					& " [req:" & req & "]"
@@ -263,6 +211,145 @@ Case (
 					& " [res:" & res & "]"
 					& " [step:" & step & "]"
 					& " [~hash:" & ~hash & "]"
+					& " [~isNewJson:" & ~isNewJson & "]"
+					& " [~hashPosition:" & ~hashPosition & "]"
+					& "¶[$~json.cache[1]:" & $~json.cache[1] & "]"
+					& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
+					& "¶[$~json.cache.data:" & $~json.cache.data & "]"
+				) ; /* logging end */
+				
+				/* remove previous cache for the previously accessed json, so the temporary cache can be saved */
+				~! = If ( ~hashPosition ;
+					Let ( [
+						~leftOfHash = Left ( $~json.cache.hash ; ~hashPosition - 1 ) ;
+						$~json.cache.hash = List (
+							Left ( ~leftOfHash ; Length ( ~leftOfHash ) - 1 ) ;
+							Right (
+								$~json.cache.hash ;
+								Length ( $~json.cache.hash ) - Length ( $~json.hash ) - ~hashPosition
+							)
+						) ;
+						
+						~valueNumber = PatternCount ( ~leftOfHash ; ¶ ) + 1 ;
+						~startOfData = Position ( $~json.cache.data ; ¶ ; 1 ; ~valueNumber - 1 ) + 1 ;
+						~endOfData = Position ( $~json.cache.data & ¶ ; ¶ ; ~startOfData ; 1 ) ;
+						$~json.cache.data = List (
+							Left ( $~json.cache.data ; ~startOfData - 2 ) ;
+							Right (
+								$~json.cache.data ;
+								Length ( $~json.cache.data ) - ~endOfData
+							)
+						)
+						
+						/* logging start */
+						; ~! = LogWriterMemoryCreateEntry (
+							"GetValuePosition: removed previous cache for previous json"
+							& " [functionId:" & functionId & "]"
+							& " [uuid:" & uuid & "]"
+							& " [req:" & req & "]"
+							& " [private:" & private & "]"
+							& " [res:" & res & "]"
+							& " [step:" & step & "]"
+							& " [$~json.hash:" & $~json.hash & "]"
+							& " [~hashPosition:" & ~hashPosition & "]"
+							& " [~leftOfHash:" & ~leftOfHash & "]"
+							& " [~valueNumber:" & ~valueNumber & "]"
+							& " [~startOfData:" & ~startOfData & "]"
+							& " [~endOfData:" & ~endOfData & "]"
+							& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
+							& "¶[$~json.cache.data:" & $~json.cache.data & "]"
+						) /* logging end */
+					] ; "" )
+				) ;
+
+				/* save the temporary cache to main storage */
+				~! = If ( ~isNewJson and not IsEmpty ( $~json.cache[1] ) ;
+					Let ( [
+						$~json.cache.hash = List ( $~json.cache.hash ; $~json.hash ) ;
+						$~json.cache.data = List ( $~json.cache.data ; Quote ( $~json.cache[1] ) )
+						/* logging start */
+						; ~! = LogWriterMemoryCreateEntry (
+							"GetValuePosition: saved temporary cache from previous json"
+							& " [functionId:" & functionId & "]"
+							& " [uuid:" & uuid & "]"
+							& " [req:" & req & "]"
+							& " [private:" & private & "]"
+							& " [res:" & res & "]"
+							& " [step:" & step & "]"
+							& " [$~json.hash:" & $~json.hash & "]"
+							& " [~hashPosition:" & ~hashPosition & "]"
+							& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
+							& "¶[$~json.cache.data:" & $~json.cache.data & "]"
+						) /* logging end */
+					] ; "" )
+				) ;
+				
+				/* clear temporary cache */
+				~! = Let ( [
+					/* delete all $~json.cache[n] variables, up to $json.config.cache.maxdepth. */
+					/* TODO: This method is temporary: do it properly
+						possibly use a method like this to generate code as text, then evaluate it: http://www.briandunning.com/cf/942. I like this idea because I don't want to recurse to complete this task.
+					*/
+					$~json.cache[1] = "" ;
+					$~json.cache[2] = "" ;
+					$~json.cache[3] = "" ;
+					$~json.cache[4] = "" ;
+					$~json.cache[5] = "" ;
+					$~json.cache[6] = "" ;
+					$~json.cache[7] = "" ;
+					$~json.cache[8] = "" ;
+					$~json.cache[9] = "" ;
+					$~json.cache[10] = ""
+				] ; "" ) ;
+				
+				/* now that temporary cache has been saved, modify $~json.hash to hold the value for the current json */
+				$~json.hash = ~hash ;
+
+				/* does cache exists for current json? */
+				~hashPosition = If ( ~isNewJson ;
+					Position ( $~json.cache.hash ; $~json.hash ; 1 ; 1 )
+				) ;
+
+				/* Load saved cache into temporary cache. */
+				$~json.cache[1] = If ( ~hashPosition ;
+					Let ( [
+						~leftOfHash = Left ( $~json.cache.hash ; ~hashPosition - 1 ) ;
+						~valueNumber = PatternCount ( ~leftOfHash ; ¶ ) + 1 ;
+						~data = GetValue ( $~json.cache.data ; ~valueNumber )
+						/* logging start */
+						; ~! = LogWriterMemoryCreateEntry (
+							"GetValuePosition: load saved cache to temp cache"
+							& " [functionId:" & functionId & "]"
+							& " [uuid:" & uuid & "]"
+							& " [req:" & req & "]"
+							& " [private:" & private & "]"
+							& " [res:" & res & "]"
+							& " [step:" & step & "]"
+							& " [$~json.hash:" & $~json.hash & "]"
+							& " [~hashPosition:" & ~hashPosition & "]"
+							& " [~leftOfHash:" & ~leftOfHash & "]"
+							& " [~valueNumber:" & ~valueNumber & "]"
+							& " [~data:" & ~data & "]"
+						) /* logging end */
+					] ;
+						Evaluate ( ~data )
+					) ;
+					/* else: use the data already in temporary cache */
+					$~json.cache[1]
+				) ;
+				
+				/* object/array walking functions increment/decrement this value on every iteration, so setting it to 0 here causes it to start at 1 on the first value */
+				$~json.depth = 0
+				/* logging start */
+				; ~! = LogWriterMemoryCreateEntry (
+					"GetValuePosition: initialize cache: end"
+					& " [functionId:" & functionId & "]"
+					& " [uuid:" & uuid & "]"
+					& " [req:" & req & "]"
+					& " [private:" & private & "]"
+					& " [res:" & res & "]"
+					& " [step:" & step & "]"
+					& " [$~json.hash:" & $~json.hash & "]"
 					& "¶[$~json.cache[1]:" & $~json.cache[1] & "]"
 					& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
 					& "¶[$~json.cache.data:" & $~json.cache.data & "]"
