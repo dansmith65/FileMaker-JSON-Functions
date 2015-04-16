@@ -119,7 +119,7 @@ Case (
 			;
 			/* logging start disabled
 			LogWriterMemoryCreateEntry (
-				"ParseObject cache: read: start"
+				"ParseStructure cache: read: start"
 					& " [functionId:" & functionId & "]"
 					& " [uuid:" & uuid & "]"
 					& " [req:" & req & "]"
@@ -157,7 +157,7 @@ Case (
 					)
 					/* logging start disabled
 					; ~! = LogWriterMemoryCreateEntry (
-						"ParseObject cache: read: data"
+						"ParseStructure cache: read: data"
 							& " [functionId:" & functionId & "]"
 							& " [uuid:" & uuid & "]"
 							& " [req:" & req & "]"
@@ -201,7 +201,7 @@ Case (
 							~nextStep = 2 /* clean-up */
 							/* logging start disabled
 							; ~! = LogWriterMemoryCreateEntry (
-								"ParseObject cache: read: found"
+								"ParseStructure cache: read: found"
 									& " [functionId:" & functionId & "]"
 									& " [uuid:" & uuid & "]"
 									& " [req:" & req & "]"
@@ -229,7 +229,7 @@ Case (
 							~nextStep = 1 /* main */
 							/* logging start disabled
 							; ~! = LogWriterMemoryCreateEntry (
-								"ParseObject cache: read: not in cache and cache not complete"
+								"ParseStructure cache: read: not in cache and cache not complete"
 									& " [functionId:" & functionId & "]"
 									& " [uuid:" & uuid & "]"
 									& " [req:" & req & "]"
@@ -331,7 +331,7 @@ Case (
 		/* logging start disabled
 		~! = If ( step < 1 ;
 			LogWriterMemoryCreateEntry (
-				"ParseObject setup"
+				"ParseStructure setup"
 					& " [functionId:" & functionId & "]"
 					& " [uuid:" & uuid & "]"
 					& " [req:" & req & "]"
@@ -358,23 +358,26 @@ Case (
 		 * STEP 1: MAIN
 		 ******************************************************
 		 */
-		~keyStartPos = If ( step = 1 ;
+		~keyStartPos = If ( step = 1 and ~isObject ;
 			$~json.at - 1
 		) ;
 		~key = If ( step = 1 ;
-			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" )
+			If ( ~isObject ;
+				z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+				~index
+			)
 		) ;
 		~valueFound = If ( step = 1
 				and functionId = 201 /* ParseObjectFindValue */
 			;
 			~key = req
 		) ;
-		~! = If ( step = 1
+		~! = If ( step = 1 and ~isObject
 				and $~json.ch ≤ " "
 			;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
-		~! = If ( step = 1 ;
+		~! = If ( step = 1 and ~isObject ;
 			/* function:next_with_param_no_result */
 			If ( $~json.ch ≠ ":" ;
 				z_jsonParseSupport1 ( 199 /* Error */ ;
@@ -390,6 +393,7 @@ Case (
 		) ;
 		~! = If ( step = 1
 				and $~json.ch ≤ " "
+				and ~isObject
 			;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
@@ -420,10 +424,10 @@ Case (
 		~! = If ( step = 1 and $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		) ;
-		/* check if at end of object */
+		/* check if at end of structure */
 		~endFound = If ( step = 1
 				and IsEmpty ( $json.error )
-				and $~json.ch = "}"
+				and $~json.ch = If ( ~isObject ; "}" ; "]" )
 			;
 			True &
 				/* function:next_no_result */
@@ -442,7 +446,7 @@ Case (
 			/* function:next_with_param_no_result */
 			If ( $~json.ch ≠ "," ;
 				z_jsonParseSupport1 ( 199 /* Error */ ;
-					"Expected , instead of " & $~json.ch ; "" ; "" ; ""
+					"Expected \",\" instead of " & Quote ( $~json.ch ) ; "" ; "" ; ""
 				) ;
 				Let ( [
 					$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
@@ -464,7 +468,7 @@ Case (
 			;
 			/* logging start disabled
 			LogWriterMemoryCreateEntry (
-				"ParseObject main: before adding value to cache"
+				"ParseStructure main: before adding value to cache"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
 				& " [req:" & req & "]"
@@ -475,7 +479,7 @@ Case (
 			) & disabled logging end */
 			List ( $~json.cache[$~json.depth] ;
 				Substitute ( ~key ; [Char(13);""] ; [Char(10);""] ; ["|";""] )
-					& "|" & ~keyStartPos - ~startPos + 1
+					& "|" & If ( ~isObject ; ~keyStartPos - ~startPos + 1 )
 					& "|" & ~valueType
 					& "|" & ~valStartPos - ~startPos + 1
 					& "|" & ~valEndPos - ~startPos + 1
@@ -486,7 +490,7 @@ Case (
 			) ;
 			/* logging start disabled
 			LogWriterMemoryCreateEntry (
-				"ParseObject main: value NOT added to cache"
+				"ParseStructure main: value NOT added to cache"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
 				& " [req:" & req & "]"
@@ -501,20 +505,26 @@ Case (
 		
 		res = If ( step = 1 ;
 			Case (
-				functionId = 200 ; /* ParseObjectFindEnd */
+				functionId = 200 /* ParseObjectFindEnd */
+					or functionId = 210 /* ParseArrayFindEnd */
+				;
 				"" ;
 				
-				functionId = 201 ; /* ParseObjectFindValue */
+				functionId = 201 /* ParseObjectFindValue */
+					or functionId = 211 /* ParseArrayFindValue */
+				;
 				If ( ~valueFound ;
 					/* returned data is almost the same as the format used in cache, except the position values are not offset and it does not include hash */
 					Substitute ( ~key ; [Char(13);""] ; [Char(10);""] ; ["|";""] )
-						& "|" & ~keyStartPos
+						& "|" & If ( ~isObject ; ~keyStartPos )
 						& "|" & ~valueType
 						& "|" & ~valStartPos
 						& "|" & ~valEndPos
 				) ;
 				
-				functionId = 202 ; /* ParseObjectGetKeyList */
+				functionId = 202 /* ParseObjectGetKeyList */
+					or functionId = 212 /* ParseArrayGetKeyList */
+				;
 				List ( res ; ~key )
 			) ;
 			res
@@ -523,7 +533,7 @@ Case (
 		/* logging start disabled
 		~! = If ( step = 1 ;
 			LogWriterMemoryCreateEntry (
-				"ParseObject main"
+				"ParseStructure main"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
 				& " [req:" & req & "]"
@@ -576,7 +586,7 @@ Case (
 				~hash = GetContainerAttribute ( ~value ; "MD5" ) ;
 				/* logging start disabled
 				~! = LogWriterMemoryCreateEntry (
-					"ParseObject clean-up"
+					"ParseStructure clean-up"
 					& " [functionId:" & functionId & "]"
 					& " [value:" & ~value & "]"
 					& " [hash:" & ~hash & "]"
@@ -590,7 +600,7 @@ Case (
 		/* logging start disabled
 		~! = If ( step = 2 ;
 			LogWriterMemoryCreateEntry (
-				"ParseObject clean-up"
+				"ParseStructure clean-up"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
 				& " [req:" & req & "]"
