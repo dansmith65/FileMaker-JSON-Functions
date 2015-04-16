@@ -165,7 +165,9 @@ Case (
 		 *							valueStartPos		position of the first character of the value
 		 *							valueEndPos			position of the last character of the value
 		 *							hash				if an object or array, the MD5 hash of it
-		 *												used to find the cache for this object/array
+		 *												used to find the cache for this object/array.
+		 *												This value is not currently used, but would be
+		 *												needed to implement jPath efficiently.
 		 *							lastAt				position of last parsed character
 		 *							
 		 *							all position values are an offset from the starting position of the
