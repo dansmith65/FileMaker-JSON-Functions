@@ -26,6 +26,10 @@ Let ( [
 	$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
 	$~json.at = 2 ;
 	$json.error = ""
+	
+	/**
+	 * TODO: initialize cache
+	 */
 ] ;
 	If ( $~json.ch ≤ " " ;
 		z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
@@ -50,7 +54,8 @@ Let ( [
 		/* clean-up parsing variables */
 		$~json.text = "" ;
 		$~json.ch = "" ;
-		$~json.at = ""
+		$~json.at = "" ;
+		$~json.depth = ""
 	] ;
 		""
 	)
