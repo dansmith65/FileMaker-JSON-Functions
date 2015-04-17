@@ -20,43 +20,4 @@
  * =====================================
  */
 
-Let ( [
-	/* initialize parsing variables */
-	$~json.text = json ;
-	$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
-	$~json.at = 2 ;
-	$json.error = ""
-	
-	/**
-	 * TODO: initialize cache
-	 */
-] ;
-	If ( $~json.ch ≤ " " ;
-		z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-	)
-	& Case (
-		/* object */
-		$~json.ch = "{" ;
-		z_jsonParseSupport2 ( 202 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
-		
-		/* array */
-		$~json.ch = "[" ;
-		z_jsonParseSupport2 ( 212 /* ParseArrayGetKeyList */ ; "" ; "" ; "" ; "" ) ;
-		
-		/* else: string, number, or word */
-		z_jsonParseSupport1 ( 199 /* Error */ ;
-			"value sent to jsonGetKeyList function was not an object or array" ; "" ; "" ; ""
-		)
-			& "?"
-	)
-	
-	& Let ( [
-		/* clean-up parsing variables */
-		$~json.text = "" ;
-		$~json.ch = "" ;
-		$~json.at = "" ;
-		$~json.depth = ""
-	] ;
-		""
-	)
-)
+z_jsonParseSupport1 ( 132 /* jsonGetKeyList */ ; json ; "" ; "" ; "" )

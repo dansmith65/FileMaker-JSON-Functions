@@ -68,7 +68,7 @@ Case (
 	 *		http://en.wikipedia.org/wiki/Whitespace_character
 	 * =====================================================================
 	 */
-	If ( Not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
+	If ( not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
 		Let ( [
 			step = step + 1 ;
 			~chunkSize = 10 ;
@@ -230,7 +230,7 @@ Case (
 						& " [~escapePos:" & ~escapePos & "]"
 				) disabled logging end */
 			] ;
-				If ( Not IsEmpty ( $json.error ) ;		/* an error occurred */
+				If ( not IsEmpty ( $json.error ) ;		/* an error occurred */
 					"?" ;
 					res & ~string
 				)

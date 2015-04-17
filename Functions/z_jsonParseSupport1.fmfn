@@ -13,6 +13,9 @@
  *			110		GetValuePosition
  *			120		GetEndPosition
  *			121		IsEmpty
+ *			130		jsonGet
+ *			131		jsonModify
+ *			132		jsonGetKeyList
  *			199		Error
  *		req = requested data (if any)
  *		private = private data, likely sent to recursive calls of a function
@@ -499,6 +502,232 @@ Case (
 	] ;
 		If ( IsEmpty ( $json.error ) ;
 			~ch = "}" or ~ch = "]"
+		)
+	) ;
+	
+	
+	
+	functionId = 130 ; /* jsonGet */
+	Let ( [
+		json = req ;
+		keyOrIndex = private ;
+		
+		~cache = z_jsonParseSupport1 ( 110 /* GetValuePosition */ ; json ; keyOrIndex ; "" ; "" )
+	] ;
+		Case (
+			not IsEmpty ( $json.error ) ;
+			"?" ;
+			
+			/**
+			 * value was found
+			 */
+			~cache ;
+			Let ( [
+				~cacheAsList = Substitute ( ~cache ; "|" ; ¶ ) ;
+				~valStartPos = GetValue ( ~cacheAsList ; 4 ) ;
+				~valEndPos = GetValue ( ~cacheAsList ; 5 ) ;
+				$~json.text = Middle ( json ; ~valStartPos ; ~valEndPos - ~valStartPos + 1 ) ;
+				$~json.ch = Left ( $~json.text ; 1 ) ;
+				$~json.at = 2 ;
+				~result = Case (
+					$~json.ch = "{" or $~json.ch = "[" ;
+					$~json.text ;
+					
+					$~json.ch = "\"" ;
+					z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+					
+					$~json.ch = "-"
+						or (
+							$~json.ch ≥ 0
+							and $~json.ch ≤ 9
+						)
+					;
+					GetAsNumber ( $~json.text ) ;
+					
+					/* else */
+					z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
+				) ;
+				
+				/* clean-up parsing variables */
+				$~json.text = "" ;
+				$~json.ch = "" ;
+				$~json.at = "" ;
+				$~json.depth = ""
+			] ;
+				~result
+			) ;
+			
+			/**
+			 * else: value was NOT found
+			 */
+			""
+		)
+	) ;
+	
+	
+	
+	functionId = 131 ; /* jsonModify */
+	Let ( [
+		json = req ;
+		keyOrIndex = private ;
+		newValue = res ;
+		
+		~cache = z_jsonParseSupport1 ( 110 /* GetValuePosition */ ; json ; keyOrIndex ; "" ; "" ) ;
+		~newValue = If ( IsEmpty ( $json.error ) ;
+			If (
+				/* return the value as-is if it's a json array or object */
+				/**
+				 * TODO: this would incorrectly detect json on a value like:
+				 *	{this is a note in curly-brances}
+				 * TODO: would also fail if there is leading/trailing whitespace
+				 */
+				Let ( [
+					~firstAndLast = Left ( newValue ; 1 ) & Right ( newValue ; 1 )
+				] ;
+					~firstAndLast = "[]"		/* array */
+					or ~firstAndLast = "{}"		/* object */
+				) ;
+				newValue ;
+
+				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
+			)
+		)
+	] ;
+		Case (
+			not IsEmpty ( $json.error ) ;
+			"?" ;
+			
+			/**
+			 * value was found
+			 */
+			~cache ;
+			Let ( [
+				~cacheAsList = Substitute ( ~cache ; "|" ; ¶ ) ;
+				~valStartPos = GetValue ( ~cacheAsList ; 4 ) ;
+				~valEndPos = GetValue ( ~cacheAsList ; 5 ) ;
+				~jsonBefore =  Middle (
+					json ;
+					1 ;
+					~valStartPos - 1
+				) ;
+				~jsonAfter = Middle (
+					json ;
+					~valEndPos + 1 ;
+					Length ( json ) - ~valEndPos + 1
+				)
+			] ;
+				~jsonBefore
+					& ~newValue
+					& ~jsonAfter
+			) ;
+			
+			
+			/**
+			 * else: value was NOT found
+			 */
+			Let ( [
+				/**
+				 * determine if the json is empty: {} or []
+				 */
+				~isEmpty = If ( IsEmpty ( $json.error ) ;
+					z_jsonParseSupport1 ( 121 /* IsEmpty */ ; json ; "" ; "" ; "" )
+				) ;
+				
+				/**
+				 * get the position of the last closing bracket
+				 */
+				~endPosition = If ( IsEmpty ( $json.error ) ;
+					z_jsonParseSupport1 ( 120 /* GetEndPosition */ ; json ; "" ; "" ; "" )
+				) ;
+				
+				/**
+				 * get text before the closing bracket
+				 */
+				~jsonBefore =  If ( IsEmpty ( $json.error ) ;
+					Middle (
+						json ;
+						1 ;
+						~endPosition - 1
+					)
+				) ;
+				
+				/**
+				 * get closing bracket and all text after it
+				 * this will preserve original trailing whitespace
+				 */
+				~jsonAfter = If ( IsEmpty ( $json.error ) ;
+					Middle (
+						json ;
+						~endPosition ;
+						Length ( json ) - ~endPosition + 1
+					)
+				) ;
+				
+				/**
+				 * get closing bracket to determine if it's an object or array
+				 */
+				~closingBracket = If ( IsEmpty ( $json.error ) ;
+					Middle ( json ; ~endPosition ; 1 )
+				)
+			] ;
+				If ( not IsEmpty ( $json.error ) ;
+					"?" ;
+					
+					~jsonBefore
+						& If ( not ~isEmpty ; "," )
+						& If ( ~closingBracket = "}" /* object */ ;
+							z_jsonEncodeSupport ( 2 /* String */ ; keyOrIndex )
+							& ":"
+						)
+						& ~newValue
+						& ~jsonAfter
+				)
+			)
+		)
+	) ;
+	
+	
+	functionId = 132 ; /* jsonGetKeyList */
+	Let ( [
+		json = req ;
+		
+		/* initialize parsing variables */
+		$~json.text = json ;
+		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
+		$~json.at = 2 ;
+		$json.error = ""
+		
+		/**
+		 * TODO: initialize cache
+		 */
+	] ;
+		If ( $~json.ch ≤ " " ;
+			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+		)
+		& Case (
+			/* object */
+			$~json.ch = "{" ;
+			z_jsonParseSupport2 ( 202 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
+			
+			/* array */
+			$~json.ch = "[" ;
+			z_jsonParseSupport2 ( 212 /* ParseArrayGetKeyList */ ; "" ; "" ; "" ; "" ) ;
+			
+			/* else: string, number, or word */
+			z_jsonParseSupport1 ( 199 /* Error */ ;
+				"value sent to jsonGetKeyList function was not an object or array" ; "" ; "" ; ""
+			)
+				& "?"
+		)
+		
+		& Let ( [
+			/* clean-up parsing variables */
+			$~json.text = "" ;
+			$~json.ch = "" ;
+			$~json.at = "" ;
+			$~json.depth = ""
+		] ;
+			""
 		)
 	) ;
 	
