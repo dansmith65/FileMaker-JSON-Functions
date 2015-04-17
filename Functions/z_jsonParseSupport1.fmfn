@@ -472,16 +472,15 @@ Case (
 		$~json.text = json ;
 		$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
 		$~json.at = 2 ;
-		$json.error = ""
+		$json.error = "" ;
 		
-		/**
-		 * TODO: initialize cache
-		 */
-	] ;
-		If ( $~json.ch ≤ " " ;
+		~! = z_jsonParseSupport1 ( 140 /* initializeCache */ ; "" ; "" ; "" ; "" ) ;
+		
+		~! = If ( $~json.ch ≤ " " ;
 			z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
 		)
-		& Case (
+	] ;
+		Case (
 			/* object */
 			$~json.ch = "{" ;
 			z_jsonParseSupport2 ( 202 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
@@ -503,6 +502,19 @@ Case (
 			$~json.ch = "" ;
 			$~json.at = "" ;
 			$~json.depth = ""
+			/* logging start disabled
+			; ~! = LogWriterMemoryCreateEntry (
+				"jsonGetKeyList: end"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [req:" & req & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& "¶[$~json.cache[1]:" & $~json.cache[1] & "]"
+				& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
+				& "¶[$~json.cache.data:" & $~json.cache.data & "]"
+			) disabled logging end */
 		] ;
 			""
 		)
@@ -511,6 +523,7 @@ Case (
 	
 	
 	functionId = 140 ; /* initializeCache */
+	Let ( [
 	/**
 	 * =====================================================================
 	 * initialize cache
@@ -564,7 +577,6 @@ Case (
 	 *
 	 * =====================================================================
 	 */
-	Let ( [
 		$json.config.cache.enabled = If ( $json.config.cache.enabled = False ;
 			False ;
 			/* only enable cache if on version 13+ because it creates MD5 hashes via GetContainerAttribute function */
