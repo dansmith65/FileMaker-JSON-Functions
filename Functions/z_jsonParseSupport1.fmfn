@@ -87,38 +87,46 @@ Case (
 			$~json.ch = "-" or ( $~json.ch ≥ 0 and $~json.ch ≤ 9 ) ;		"n" ;
 			/* else: assume word */
 			"w"
-		)
-	] ;
-		/* TODO: don't return a result if ParseValueSkip */
-		Case (
-			~valueType = "o" or ~valueType = "a" ;
-			Let ( [
-				~start = $~json.at - 1 ;
-				~! = If ( ~valueType = "o" ;
-					z_jsonParseSupport2 ( 200 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
-					z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" )
-				) ;
-				~end =  $~json.at
-			] ;
-				/* TODO: don't extract the value if ParseValueSkip */
-				If ( IsEmpty ( $json.error ) ;
-					Middle (
-						$~json.text ;
-						~start ;
-						~end - ~start - 1
+		) ;
+		res =
+			Case (
+				~valueType = "o" or ~valueType = "a" ;
+				Let ( [
+					~start = $~json.at - 1 ;
+					~! = If ( ~valueType = "o" ;
+						z_jsonParseSupport2 ( 200 /* ParseObjectFindEnd */ ; "" ; "" ; "" ; "" ) ;
+						z_jsonParseSupport2 ( 210 /* ParseArrayFindEnd */ ; "" ; "" ; "" ; "" )
 					) ;
-					"?"
-				)
-			) ;
+					~end =  $~json.at
+				] ;
+					If ( functionId = 100 /* ParseValue */
+							and IsEmpty ( $json.error )
+						;
+						Middle (
+							$~json.text ;
+							~start ;
+							~end - ~start - 1
+						)
+					)
+				) ;
+				
+				~valueType = "s" ;
+				z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
+				
+				~valueType = "n" ;
+				z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
+				
+				/* else */
+				z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
+			)
+	] ;
+		Case ( not IsEmpty ( $json.error ) ;
+			"?" ;
+		
+			functionId = 100 /* ParseValue */ ;
+			res ;
 			
-			~valueType = "s" ;
-			z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" ) ;
-			
-			~valueType = "n" ;
-			z_jsonParseSupport3 ( 320 /* ParseNumber */ ; "" ; "" ; "" ; "" ) ;
-			
-			/* else */
-			z_jsonParseSupport3 ( 330 /* ParseWord */ ; "" ; "" ; "" ; "" )
+			""
 		)
 	) ;
 	
