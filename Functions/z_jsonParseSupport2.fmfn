@@ -30,7 +30,7 @@
  * =====================================
  */
 
-/* logging start */
+/* logging start disabled
 Let ( [
 	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
@@ -43,7 +43,7 @@ Let ( [
 			& " [step:" & step & "]"
 	)
 ] ;
-/* logging end */
+disabled logging end */
 Case (
 	
 	
@@ -120,7 +120,7 @@ Case (
 				and not IsEmpty ( $~json.cache[$~json.depth] )
 				and IsEmpty ( $json.error )
 			;
-			/* logging start */
+			/* logging start disabled
 			LogWriterMemoryCreateEntry (
 				"ParseStructure cache: read: start"
 					& " [functionId:" & functionId & "]"
@@ -130,7 +130,7 @@ Case (
 					& " [res:" & res & "]"
 					& " [step:" & step & "]"
 					& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
-			) & /* logging end */
+			) & disabled logging end */
 			Case (
 				functionId = 201 /* ParseObjectFindValue */
 					or functionId = 211 /* ParseArrayFindValue */
@@ -160,7 +160,7 @@ Case (
 							~cachePosEnd - ~cachePosStart
 						)
 					)
-					/* logging start */
+					/* logging start disabled
 					; ~! = LogWriterMemoryCreateEntry (
 						"ParseStructure cache: read: data"
 							& " [functionId:" & functionId & "]"
@@ -174,7 +174,7 @@ Case (
 							& " [~cachePosStart:" & ~cachePosStart & "]"
 							& " [~cachePosEnd:" & ~cachePosEnd & "]"
 							& " [~cache:" & ~cache & "]"
-					) /* logging end */
+					) disabled logging end */
 				] ;
 					Case (
 						/* key found in cache */
@@ -204,7 +204,7 @@ Case (
 							;
 							$~json.temp.res = ~cacheWithOffsetApplied ;
 							~nextStep = 2 /* clean-up */
-							/* logging start */
+							/* logging start disabled
 							; ~! = LogWriterMemoryCreateEntry (
 								"ParseStructure cache: read: found"
 									& " [functionId:" & functionId & "]"
@@ -215,7 +215,7 @@ Case (
 									& " [step:" & step & "]"
 									& " [~nextStep:" & ~nextStep & "]"
 									& " [~cacheWithOffsetApplied:" & ~cacheWithOffsetApplied & "]"
-							) /* logging end */
+							) disabled logging end */
 						] ;
 							~nextStep
 						) ;
@@ -239,7 +239,7 @@ Case (
 							$~json.at = GetAsNumber ( ~lastAt ) + ~startPos ;
 							$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 ) ;
 							~nextStep = 1 /* main */
-							/* logging start */
+							/* logging start disabled
 							; ~! = LogWriterMemoryCreateEntry (
 								"ParseStructure cache: read: not in cache and cache not complete"
 									& " [functionId:" & functionId & "]"
@@ -254,7 +254,7 @@ Case (
 									& " [~lastAt:" & ~lastAt & "]"
 									& " [$~json.temp.index:" & $~json.temp.index & "]"
 									& " [~nextStep:" & ~nextStep & "]"
-							) /* logging end */
+							) disabled logging end */
 						] ;
 							If ( IsEmpty ( ~lastAt ) ;
 								2 /* nextStep: clean-up */
@@ -283,7 +283,7 @@ Case (
 					) ;
 					~nextStep = If ( ~cacheIsComplete ; 2 ; 1 )
 					
-					/* logging start */
+					/* logging start disabled
 					; ~! = LogWriterMemoryCreateEntry (
 						"ParseStructure cache: read: data"
 							& " [functionId:" & functionId & "]"
@@ -296,7 +296,7 @@ Case (
 							& " [~cacheIsComplete:" & ~cacheIsComplete & "]"
 							& " [~nextStep:" & ~nextStep & "]"
 							& " [$~json.temp.res:" & $~json.temp.res & "]"
-					) /* logging end */
+					) disabled logging end */
 				] ;
 					If ( ~cacheIsComplete ;
 						2 ; /* nextStep: clean-up */
@@ -312,7 +312,7 @@ Case (
 							) ;
 							~nextStep = 1 /* main */
 							
-							/* logging start */
+							/* logging start disabled
 							; ~! = LogWriterMemoryCreateEntry (
 								"ParseStructure cache: read: cache not complete"
 									& " [functionId:" & functionId & "]"
@@ -324,7 +324,7 @@ Case (
 									& " [~lastEntry:" & ~lastEntry & "]"
 									& " [$~json.temp.index:" & $~json.temp.index & "]"
 									& " [~nextStep:" & ~nextStep & "]"
-							) /* logging end */
+							) disabled logging end */
 						] ;
 							~nextStep
 						)
@@ -333,7 +333,7 @@ Case (
 				
 				/* else: caching not enabled for this function, yet */
 				
-				/* logging start */
+				/* logging start disabled
 				LogWriterMemoryCreateEntry (
 					"ParseStructure cache not enabled for this function"
 						& " [functionId:" & functionId & "]"
@@ -343,7 +343,7 @@ Case (
 						& " [res:" & res & "]"
 						& " [step:" & step & "]"
 						& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
-				) /* logging end */
+				) disabled logging end */
 			
 			) ;
 			/* else: don't attempt to read cache */
@@ -410,7 +410,7 @@ Case (
 			) ;
 			res
 		) ;
-		/* logging start */
+		/* logging start disabled
 		~! = If ( step < 1 ;
 			LogWriterMemoryCreateEntry (
 				"ParseStructure setup"
@@ -422,7 +422,7 @@ Case (
 					& " [step:" & step & "]"
 					& " [~endFound:" & ~endFound & "]"
 			) 
-		) ; /* logging end */
+		) ; disabled logging end */
 		step = If ( step < 1 ;
 			If (
 				not IsEmpty ( $json.error )
@@ -457,7 +457,7 @@ Case (
 			~key = req
 		) ;
 		
-		/* logging start */
+		/* logging start disabled
 		~! = If ( step = 1 and ~valueFound ;
 			LogWriterMemoryCreateEntry (
 				"ParseStructure main: valueFound"
@@ -470,7 +470,7 @@ Case (
 				& " [~key:" & ~key & "]"
 				& " [~valueFound:" & ~valueFound & "]"
 			)
-		) ; /* logging end */
+		) ; disabled logging end */
 		
 		~! = If ( step = 1 and ~isObject
 				and $~json.ch ≤ " "
@@ -569,7 +569,7 @@ Case (
 				and IsEmpty ( $json.error )
 				and ~cache.enabled
 			;
-			/* logging start */
+			/* logging start disabled
 			LogWriterMemoryCreateEntry (
 				"ParseStructure main: before adding value to cache"
 				& " [functionId:" & functionId & "]"
@@ -580,7 +580,7 @@ Case (
 				& " [step:" & step & "]"
 				& " [~index:" & ~index & "]"
 				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
-			) & /* logging end */
+			) & disabled logging end */
 			List ( $~json.cache[$~json.depth] ;
 				Substitute ( ~key ; [Char(13);""] ; [Char(10);""] ; ["|";""] )
 					& "|" & If ( ~isObject ; ~keyStartPos - ~startPos + 1 )
@@ -595,7 +595,7 @@ Case (
 			
 			/* else */
 			$~json.cache[$~json.depth]
-			/* logging start */
+			/* logging start disabled
 			& LogWriterMemoryCreateEntry (
 				"ParseStructure main: value NOT added to cache"
 				& " [functionId:" & functionId & "]"
@@ -607,7 +607,7 @@ Case (
 				& " [~index:" & ~index & "]"
 				& " [~cache.enabled:" & ~cache.enabled & "]"
 				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
-			) /* logging end */
+			) disabled logging end */
 		) ;
 		
 		res = If ( step = 1 ;
@@ -637,7 +637,7 @@ Case (
 			res
 		) ;
 		
-		/* logging start */
+		/* logging start disabled
 		~! = If ( step = 1 ;
 			LogWriterMemoryCreateEntry (
 				"ParseStructure main"
@@ -657,7 +657,7 @@ Case (
 				& " [~index:" & ~index & "]"
 				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
 			)
-		) ; /* logging end */
+		) ; disabled logging end */
 		
 		step = If ( step = 1 ;
 			If (
@@ -693,13 +693,13 @@ Case (
 			Let ( [
 				~value = Middle ( $~json.text ; ~startPos ; $~json.at - ~startPos - 1 ) ;
 				~hash = GetContainerAttribute ( ~value ; "MD5" ) ;
-				/* logging start */
+				/* logging start disabled
 				~! = LogWriterMemoryCreateEntry (
 					"ParseStructure clean-up: save cache"
 					& " [functionId:" & functionId & "]"
 					& " [hash:" & ~hash & "]"
 					& " [value:" & ~value & "]"
-				) ; /* logging end */
+				) ; disabled logging end */
 				/* is there any scenario where this data already exists in cache?
 					TODO: try to write a test that makes this code fail by adding the same hash/data to stored cache more than once.
 				*/
@@ -717,7 +717,7 @@ Case (
 		) ;
 		/* load separate values back into private */
 		private = ~startPos & ¶ & ~index ;
-		/* logging start */
+		/* logging start disabled
 		~! = If ( step = 2 ;
 			LogWriterMemoryCreateEntry (
 				"ParseStructure clean-up"
@@ -735,7 +735,7 @@ Case (
 				& "¶[$~json.cache.hash:" & $~json.cache.hash & "]"
 				& "¶[$~json.cache.data:" & $~json.cache.data & "]"
 			)
-		) ; /* logging end */
+		) ; disabled logging end */
 		$~json.depth = If ( step = 2 ;
 			$~json.depth - 1 ;
 			$~json.depth
@@ -746,18 +746,12 @@ Case (
 			res
 		)
 	) ;
-	
-	
-	
-	functionId = 220 /* GetKeyListFromCache */ ;
-	z_jsonParseSupport1 ( 199 /* Error */ ;
-		"functionId " & functionId & " not implemented" ; "" ; "" ; ""
-	) ;
-	
-	
-	
-	
-	functionId = 221 /* GetIndexListFromCache */ ;
+
+
+
+	functionId = 220 /* GetKeyListFromCache */
+		or functionId = 221 /* GetIndexListFromCache */
+	;
 	/**
 	 * =====================================================================
 	 * GetIndexListFromCache
@@ -766,7 +760,10 @@ Case (
 	 *		req = not used
 	 *		private = iteration counter
 	 *
-	 * returns:
+	 * GetKeyListFromCache returns:
+	 *		list of object names for data in $~json.cache[$~json.depth]
+	 *
+	 * GetIndexListFromCache returns:
 	 *		list of array indexes for data in $~json.cache[$~json.depth]
 	 * =====================================================================
 	 */
@@ -785,12 +782,11 @@ Case (
 			2 ; /* main */
 			1 /* clean-up*/
 		) ;
-		/* logging start */
+		/* logging start disabled
 		~! = LogWriterMemoryCreateEntry (
-			"GetIndexListFromCache setup on every call"
+			"GetKeyOrIndexListFromCache setup on every call"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
-				& " [req:" & req & "]"
 				& " [private:" & private & "]"
 				& " [res:" & res & "]"
 				& " [step:" & step & "]"
@@ -798,7 +794,7 @@ Case (
 				& " [~cacheItem:" & ~cacheItem & "]"
 				& " [~cacheIsComplete:" & ~cacheIsComplete & "]"
 				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
-		) ; /* logging end */
+		) ; disabled logging end */
 		
 		/**
 		 ******************************************************
@@ -813,27 +809,45 @@ Case (
 		 ******************************************************
 		 */
 		~key = If ( step = 1 ;
-			Left (
-				~cacheItem ;
-				Position ( ~cacheItem ; "|" ; 1 ; 1 ) - 1
+			If ( functionId = 220 /* GetKeyListFromCache */ ;
+				/**
+				 * extract original key from json
+				 * (the key in cache has had returns and pipe removed)
+				 */
+				Let ( [
+					~keyStartPos = GetValue ( Substitute ( ~cacheItem ; "|" ; "¶" ) ; 2 ) ;
+					/* NOTE: am NOT offsetting by the array's start position because GetKeyList is only meant to be called on a top-level structure */
+					$~json.at = GetAsNumber ( ~keyStartPos ) + 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" )
+				) ;
+				
+				/* else: GetIndexListFromCache */
+				Left (
+					~cacheItem ;
+					Position ( ~cacheItem ; "|" ; 1 ; 1 ) - 1
+				)
 			)
 		) ;
-		~! = If ( step = 1 and GetAsNumber ( ~key ) ≠ ~i - 1 ;
+		~! = If ( step = 1
+				and functionId = 221 /* GetIndexListFromCache */
+				and GetAsNumber ( ~key ) ≠ ~i - 1
+			;
 			z_jsonParseSupport1 ( 199 /* Error */ ;
 				"Invalid cache: key " & Quote ( ~key ) & " did not match index " & Quote ( ~i - 1 ) ; "" ; "" ; ""
 			)
 		) ;
 		res = If ( step = 1 and IsEmpty ( $~json.error ) ;
-			List ( res ; ~i - 1 ) ;
+			List ( res ; ~key ) ;
 			res
 		) ;
 		
-		/* logging start */
+		/* logging start disabled
 		~! = If ( step = 1 ; LogWriterMemoryCreateEntry (
-			"GetIndexListFromCache after main"
+			"GetKeyOrIndexListFromCache after main"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
-				& " [req:" & req & "]"
 				& " [private:" & private & "]"
 				& " [res:" & res & "]"
 				& " [step:" & step & "]"
@@ -841,7 +855,7 @@ Case (
 				& " [~cacheItem:" & ~cacheItem & "]"
 				& " [~cacheIsComplete:" & ~cacheIsComplete & "]"
 				& " [~key:" & ~key & "]"
-		) ) ; /* logging end */
+		) ) ; disabled logging end */
 		
 		
 		/**
@@ -867,14 +881,13 @@ Case (
 				~lastPipe = Position ( ~lastCacheData ; "|" ; ~length ; -1 ) ;
 				~lastAt = Right ( ~lastCacheData ; ~length - ~lastPipe ) ;
 				/* NOTE: am NOT offsetting by the array's start position because GetKeyList is only meant to be called on a top-level structure */
-				$~json.at = GetAsNumber ( ~lastAt ) ;
+				$~json.at = GetAsNumber ( ~lastAt ) + 1 ;
 				$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
-				/* logging start */
+				/* logging start disabled
 				; ~! = If ( step = 2 ; LogWriterMemoryCreateEntry (
-					"GetIndexListFromCache clean-up: move pointer"
+					"GetKeyOrIndexListFromCache clean-up: move pointer"
 						& " [functionId:" & functionId & "]"
 						& " [uuid:" & uuid & "]"
-						& " [req:" & req & "]"
 						& " [private:" & private & "]"
 						& " [res:" & res & "]"
 						& " [step:" & step & "]"
@@ -884,7 +897,7 @@ Case (
 						& " [~lastPipe:" & ~lastPipe & "]"
 						& " [~lastAt:" & ~lastAt & "]"
 						& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
-				) ) /* logging end */
+				) ) disabled logging end */
 			] ;
 				If ( IsEmpty ( ~lastAt ) ;
 					z_jsonParseSupport1 ( 199 /* Error */ ;
@@ -897,18 +910,17 @@ Case (
 		/* load data back into private */
 		private = ~i
 		
-		/* logging start */
+		/* logging start disabled
 		; ~! = If ( step = 2 ; LogWriterMemoryCreateEntry (
-			"GetIndexListFromCache after clean-up"
+			"GetKeyOrIndexListFromCache after clean-up"
 				& " [functionId:" & functionId & "]"
 				& " [uuid:" & uuid & "]"
-				& " [req:" & req & "]"
 				& " [private:" & private & "]"
 				& " [res:" & res & "]"
 				& " [step:" & step & "]"
 				& " [~i:" & ~i & "]"
 				& " [~cacheItem:" & ~cacheItem & "]"
-		) ) /* logging end */
+		) ) disabled logging end */
 		
 	] ;
 		If ( step = 1 ;
@@ -928,6 +940,6 @@ Case (
 	)
 )
 
-/* logging start */
+/* logging start disabled
 )
-/* logging end */
+disabled logging end */
