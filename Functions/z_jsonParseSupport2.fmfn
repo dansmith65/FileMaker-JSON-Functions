@@ -244,7 +244,6 @@ Case (
 									& " [private:" & private & "]"
 									& " [res:" & res & "]"
 									& " [step:" & step & "]"
-									& " [~lastEntry:" & ~lastEntry & "]"
 									& " [~length:" & ~length & "]"
 									& " [~lastPipe:" & ~lastPipe & "]"
 									& " [~lastAt:" & ~lastAt & "]"
@@ -317,7 +316,6 @@ Case (
 									& " [private:" & private & "]"
 									& " [res:" & res & "]"
 									& " [step:" & step & "]"
-									& " [~lastEntry:" & ~lastEntry & "]"
 									& " [$~json.temp.index:" & $~json.temp.index & "]"
 									& " [~nextStep:" & ~nextStep & "]"
 							) disabled logging end */
@@ -334,11 +332,6 @@ Case (
 					"ParseStructure cache not enabled for this function"
 						& " [functionId:" & functionId & "]"
 						& " [uuid:" & uuid & "]"
-						& " [req:" & req & "]"
-						& " [private:" & private & "]"
-						& " [res:" & res & "]"
-						& " [step:" & step & "]"
-						& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
 				) disabled logging end */
 			
 			) ;
