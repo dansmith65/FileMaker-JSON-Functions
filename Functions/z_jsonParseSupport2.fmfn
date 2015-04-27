@@ -17,6 +17,10 @@
  *			220		GetKeyListFromCache
  *			221		GetIndexListFromCache
  *
+ * DEPENDENCIES:
+ *		Custom Functions:
+ *			z_jsonParseSupport1 - 3
+ *
  * LICENSE:
  *		See the LICENSE.md file for license rights and limitations (MIT):
  *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md

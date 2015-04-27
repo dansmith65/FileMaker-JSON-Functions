@@ -10,7 +10,8 @@
  *		value = any value to be encoded
  *
  * DEPENDENCIES:
- *		none
+ *		Custom Functions:
+ *			z_jsonEncodeSupport
  *
  * LICENSE:
  *		See the LICENSE.md file for license rights and limitations (MIT):

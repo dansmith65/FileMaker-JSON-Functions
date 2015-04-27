@@ -10,7 +10,8 @@
  *		json = the json string
  *
  * DEPENDENCIES:
- *		z_jsonParseSupport2
+ *		Custom Functions:
+ *			z_jsonParseSupport1
  *
  * NOTES:
  *

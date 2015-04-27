@@ -17,8 +17,7 @@
  *
  * DEPENDENCIES:
  *		Custom Functions:
- *			z_jsonParseSupport1 - 3
- *			z_jsonEncodeSupport
+ *			z_jsonParseSupport1
  *
  * LICENSE:
  *		See the LICENSE.md file for license rights and limitations (MIT):
