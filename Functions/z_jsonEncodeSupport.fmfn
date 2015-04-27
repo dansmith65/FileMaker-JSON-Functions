@@ -45,10 +45,6 @@ Case (
 	 *
 	 * NOTES:
 	 *		named constants are NOT case sensitive
-	 *
-	 * HISTORY:
-	 *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
-	 *
 	 * =====================================
 	 */
 
@@ -94,11 +90,6 @@ Case (
 	 *
 	 * PARAMETERS:
 	 *		req = any value to be escaped as a string
-	 *
-	 * DEPENDENCIES:
-	 * HISTORY:
-	 *		CREATED on 2015-FEB-05 by Daniel Smith dansmith65@gmail.com
-	 *
 	 * =====================================
 	 */
 
@@ -167,10 +158,6 @@ Case (
 	 *
 	 * PARAMETERS:
 	 *		req = a valid number
-	 *
-	 * HISTORY:
-	 *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
-	 *
 	 * =====================================
 	 */
 
