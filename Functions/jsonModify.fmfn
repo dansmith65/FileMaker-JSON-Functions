@@ -17,166 +17,17 @@
  *
  * DEPENDENCIES:
  *		Custom Functions:
- *			z_jsonParseSupport1 - 3
- *			z_jsonEncodeSupport
+ *			z_jsonParseSupport1
  *
- * NOTES:
+ * LICENSE:
+ *		See the LICENSE.md file for license rights and limitations (MIT):
+ *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
  *
- * TODO:
- *		Determine how to add an array value
- *			- should it allow positional insertion?
- *				- insert before other values
- *					- negative number?
- *					- "unshift" (like the json method) ?
- *				- insert between values
- *					- decimal: 2.5 would insert after 2?
- *				- insert at end
- *					- I assume this would be the most common use-case
- *					- empty keyOrIndex value?
- *			- if the index is higher than array size + 1, should it pad the array
- *			  with null values like javascript does?
+ * LINK: https://github.com/dansmith65/FileMaker-JSON-Functions
  *
  * HISTORY:
- *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
- *
+ *		v1.0.0 RELEASED on 2015-APR-27 by Daniel Smith dansmith65@gmail.com
  * =====================================
  */
 
-If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
-	/**
-	 * value was found
-	 * The pointer stores the starting position of the value.
-	 * Get all text before the value & encode the new value & get all text after the value
-	 */
-	Let ( [
-		/**
-		 * get text before the value
-		 * Offset length by -2 because it is actually pointing at the first
-		 * character after the value.
-		 */
-		~jsonBefore = Middle (
-			$~json.text ;
-			1 ;
-			$~json.at - 2
-		) ;
-		
-		/**
-		 * get text after the value
-		 * Offset starting point by -1 because it is actually pointing at the second
-		 * character after the value.
-		 */
-		~! = z_jsonParseSupport1 ( 101 /* ParseValueSkip */ ; "" ; "" ; "" ; "" ) ;
-		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
-			Middle (
-				$~json.text ;
-				$~json.at - 1 ;
-				Length ( $~json.text )
-			)
-		) ;
-		
-		~newValue = If ( IsEmpty ( $~json.error ) ;
-			If (
-				/* return the value as-is if it's a json array or object */
-				/**
-				 * TODO: this would incorrectly detect json on a value like:
-				 *	{this is a note in curly-brances}
-				 * TODO: would also fail if there is leading/trailing whitespace
-				 */
-				Let ( [
-					~firstAndLast = Left ( newValue ; 1 ) & Right ( newValue ; 1 )
-				] ;
-					~firstAndLast = "[]"		/* array */
-					or ~firstAndLast = "{}"		/* object */
-				) ;
-				newValue ;
-
-				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
-			)
-		)
-	] ;
-		If ( IsEmpty ( $~json.error ) ;
-			~jsonBefore
-				& ~newValue
-				& ~jsonAfter
-			;
-			"Error: " & $~json.error
-		)
-	) ;
-
-	
-	/**
-	 * value was NOT found
-	 */
-	Let ( [
-		/**
-		 * determine if the json is empty: {} or []
-		 */
-		~isEmpty = If ( IsEmpty ( $~json.error ) ;
-			z_jsonParseSupport1 ( 121 /* IsEmpty */ ; "" ; "" ; "" ; "" )
-		) ;
-		
-		/**
-		 * get the position of the last closing bracket
-		 */
-		~endPosition = If ( IsEmpty ( $~json.error ) ;
-			z_jsonParseSupport1 ( 120 /* FindEnd */ ; "" ; "" ; "" ; "" )
-		) ;
-		
-		/**
-		 * get text before the closing bracket
-		 */
-		~jsonBefore =  If ( IsEmpty ( $~json.error ) ;
-			Middle (
-				$~json.text ;
-				1 ;
-				$~json.at
-			)
-		) ;
-		
-		/**
-		 * get closing bracket and all text after it
-		 * this will preserver original trailing whitespace
-		 */
-		~jsonAfter = If ( IsEmpty ( $~json.error ) ;
-			Middle (
-				$~json.text ;
-				$~json.at + 1 ;
-				Length ( $~json.text )
-			)
-		) ;
-		
-		~newValue = If ( IsEmpty ( $~json.error ) ;
-			If (
-				/* return the value as-is if it's a json array or object */
-				/**
-				 * TODO: this would incorrectly detect json on a value like:
-				 *	{this is a note in curly-brances}
-				 * TODO: would also fail if there is leading/trailing whitespace
-				 */
-				Let ( [
-					~firstAndLast = Left ( newValue ; 1 ) & Right ( newValue ; 1 )
-				] ;
-					~firstAndLast = "[]"		/* array */
-					or ~firstAndLast = "{}"		/* object */
-				) ;
-				newValue ;
-
-				z_jsonEncodeSupport ( 1 /* Value */ ; newValue )
-			)
-		)
-	] ;
-		If ( IsEmpty ( $~json.error ) ;
-			~jsonBefore
-				& If ( not ~isEmpty ; "," )
-				& If ( keyOrIndex ≠ GetAsNumber ( keyOrIndex ) ;
-					/* keyOrIndex is a string, so assume it's meant to be an object key */
-					z_jsonEncodeSupport ( 2 /* String */ ; keyOrIndex )
-					& ":"
-				)
-				& ~newValue
-				& ~jsonAfter
-			;
-			"Error: " & $~json.error
-		)
-	)
-)
+z_jsonParseSupport1 ( 131 /* jsonModify */ ; json ; keyOrIndex ; newValue ; "" )

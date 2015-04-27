@@ -20,23 +20,31 @@
  *		step = current state of a recursive function
  *
  * DEPENDENCIES:
- *		none
+ *		Custom Functions:
+ *			z_jsonParseSupport1, 3
+ *
+ * LICENSE:
+ *		See the LICENSE.md file for license rights and limitations (MIT):
+ *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
+ *
+ * LINK: https://github.com/dansmith65/FileMaker-JSON-Functions
  *
  * HISTORY:
- *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
- *
+ *		v1.0.0 RELEASED on 2015-APR-27 by Daniel Smith dansmith65@gmail.com
  * =====================================
  */
 
 /* logging start disabled
 Let ( [
+	uuid = Get ( UUID ) ;
 	~! = LogWriterMemoryCreateEntry (
-		"z_jsonParseSupport3 "
+		"z_jsonParseSupport3"
 			& " [functionId:" & functionId & "]"
-			& " [step:" & step & "]"
+			& " [uuid:" & uuid & "]"
 			& " [req:" & req & "]"
 			& " [private:" & private & "]"
 			& " [res:" & res & "]"
+			& " [step:" & step & "]"
 	)
 ] ;
 disabled logging end */
@@ -66,7 +74,7 @@ Case (
 	 *		http://en.wikipedia.org/wiki/Whitespace_character
 	 * =====================================================================
 	 */
-	If ( Not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
+	If ( not IsEmpty ( $~json.ch ) and $~json.ch ≤ " " ;
 		Let ( [
 			step = step + 1 ;
 			~chunkSize = 10 ;
@@ -149,7 +157,7 @@ Case (
 			~end = 0 ;
 			z_jsonParseSupport1 ( 199 /* Error */ ;
 				"Bad string: reached end of json before end of string" ; "" ; "" ; ""
-			) & "Error: " & $~json.error ;
+			) & "?" ;
 			
 			~escapePos > 0 and ~escapePos < ~end ;
 			/* the escape character was found */
@@ -228,8 +236,8 @@ Case (
 						& " [~escapePos:" & ~escapePos & "]"
 				) disabled logging end */
 			] ;
-				If ( Not IsEmpty ( $~json.error ) ;		/* an error occurred */
-					"Error: " & $~json.error ;
+				If ( not IsEmpty ( $json.error ) ;		/* an error occurred */
+					"?" ;
 					res & ~string
 				)
 			)
@@ -273,7 +281,7 @@ Case (
 		res = res * 16 + ~hex
 	] ;
 		Case (
-			not IsEmpty ( $~json.error )	;	/* an error occurred */
+			not IsEmpty ( $json.error )	;	/* an error occurred */
 			"" ;
 			
 			IsEmpty ( ~hex )
@@ -354,7 +362,7 @@ Case (
 
 			& z_jsonParseSupport3 ( 321 /*ParseDigits*/ ; "" ; "" ; "" ; "" )
 	] ;
-		If ( IsEmpty ( $~json.error ) ;
+		If ( IsEmpty ( $json.error ) ;
 			GetAsNumber ( ~string )
 		)
 	) ;
@@ -426,7 +434,7 @@ Case (
 		z_jsonParseSupport1 ( 199 /* Error */ ;
 			"Unexpected " & Quote ( $~json.ch ) & " at start of ParseWord" ; "" ; "" ; ""
 		)
-		& "Error: " & $~json.error ;
+		& "?" ;
 		
 		Let ( [
 			~len =  Case (
@@ -445,7 +453,7 @@ Case (
 				z_jsonParseSupport1 ( 199 /* Error */ ;
 					"Invalid word " & Quote ( ~word ) ; "" ; "" ; ""
 				)
-				& "Error: " & $~json.error ;
+				& "?" ;
 				
 				/* else: update pointer, return word */
 				Let ( [

@@ -12,20 +12,20 @@
  *		keyOrIndex = object property key (name) or array index (position)
  *
  * DEPENDENCIES:
- *		
+ *		Custom Functions:
+ *			z_jsonParseSupport1
  *
  * NOTES:
  *
- * HISTORY:
- *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ * LICENSE:
+ *		See the LICENSE.md file for license rights and limitations (MIT):
+ *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
  *
+ * LINK: https://github.com/dansmith65/FileMaker-JSON-Functions
+ *
+ * HISTORY:
+ *		v1.0.0 RELEASED on 2015-APR-27 by Daniel Smith dansmith65@gmail.com
  * =====================================
  */
 
-If ( z_jsonParseSupport1 ( 110 /* FindValue */ ; json ; keyOrIndex ; "" ; "" ) ;
-	z_jsonParseSupport1 ( 100 /* ParseValue */ ; "" ; "" ; "" ; "" ) ;
-	If ( IsEmpty ( $~json.error ) ;
-		"" ; /* not found */
-		"Error: " & $~json.error
-	)
-)
+z_jsonParseSupport1 ( 130 /* jsonGet */ ; json ; keyOrIndex ; "" ; "" )

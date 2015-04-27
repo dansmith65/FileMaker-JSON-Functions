@@ -10,57 +10,20 @@
  *		json = the json string
  *
  * DEPENDENCIES:
- *		z_jsonParseSupport2
+ *		Custom Functions:
+ *			z_jsonParseSupport1
  *
  * NOTES:
  *
- * HISTORY:
- *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
+ * LICENSE:
+ *		See the LICENSE.md file for license rights and limitations (MIT):
+ *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
  *
+ * LINK: https://github.com/dansmith65/FileMaker-JSON-Functions
+ *
+ * HISTORY:
+ *		v1.0.0 RELEASED on 2015-APR-27 by Daniel Smith dansmith65@gmail.com
  * =====================================
  */
 
-Let ( [
-	/* initialize parsing variables */
-	$~json.text = json ;
-	$~json.ch = Middle ( $~json.text ; 1 ; 1 ) ;
-	$~json.at = 2 ;
-	$~json.error = ""
-] ;
-	If ( $~json.ch ≤ " " ;
-		z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
-	)
-	& Case (
-		/* object */
-		$~json.ch = "{" ;
-		z_jsonParseSupport2 ( 222 /* ParseObjectGetKeyList */ ; "" ; "" ; "" ; "" ) ;
-		
-		/* array */
-		$~json.ch = "[" ;
-		z_jsonParseSupport2 ( 212 /* ParseArrayGetKeyList */ ; "" ; "" ; "" ; "" ) ;
-		
-		/* else: string, number, or word */
-		z_jsonParseSupport1 ( 199 /* Error */ ;
-			"value sent to jsonGetKeyList function was a string, number, or word. An object or array was expected." ; "" ; "" ; ""
-		)
-		& "Error: "
-		& $~json.error
-	)
-	
-	/* clean-up */
-	& Let ( [
-		/* save error to public variable */
-		$json.error = $~json.error
-		/* TODO: enable for production use
-			actually, as currently implemented, this function can't clear these
-			values because calling functions are using them.
-			So, any function that calls this one needs to clear these values.
-		; $~json.error = ""
-		$~json.ch = "" ;
-		$~json.at = 1 ;
-		$~json.text = json
-		*/
-	] ;
-		""
-	)
-)
+z_jsonParseSupport1 ( 132 /* jsonGetKeyList */ ; json ; "" ; "" ; "" )

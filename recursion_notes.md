@@ -17,7 +17,7 @@ Recursion limit for custom function:
 Observations
 ------------
 
-###### Tail recursion allows a maximum depth of 49,999.
+###### <a name="1">Tail recursion allows a maximum depth of 49,999.</a>
 
 ```
 /**
@@ -34,7 +34,7 @@ If ( iteration >= 49999 ;
 ```
 
 
-###### Saving the result to a variable prevents tail recursion and limits the maximum iterations to 10,000.
+###### <a name="2">Saving the result to a variable prevents tail recursion and limits the maximum iterations to 10,000.</a>
 
 ```
 /**
@@ -55,7 +55,7 @@ If ( iteration >= 10000 ;
 ```
 
 
-<a name="3">letVaraibles, $localVariables, and $$globalVariables can still be used with tail recursion, though.</a>
+###### <a name="3">letVariables, $localVariables, and $$globalVariables can still be used with tail recursion, though.</a>
 
 ```
 /**
@@ -78,7 +78,7 @@ If ( iteration >= 49999 ;
 ```
 
 
-<a name="4">Nested Let statements can be used with tail recursion as well.</a>
+###### <a name="4">Nested Let statements can be used with tail recursion as well.</a>
 
 ```
 /**
@@ -107,7 +107,7 @@ If ( iteration >= 49999 ;
 ```
 
 
-<a name="5">A recursive sub-function does not "free up" it's recursive calls once it returns it's result to the calling function. In other words; there is no way to go beyond 50,000 recursive calls.</a>
+###### <a name="5">A recursive sub-function does not "free up" it's recursive calls once it returns it's result to the calling function. In other words; there is no way to go beyond 50,000 recursive calls.</a>
 
 ```
 /**
@@ -133,7 +133,7 @@ If ( iteration >= 4998 ;
 ```
 
 
-<a name="6">Non-recursive sub-function also uses up recursive calls.</a>
+###### <a name="6">Non-recursive sub-function also uses up recursive calls.</a>
 
 ```
 /**
@@ -157,7 +157,7 @@ iteration
 ```
 
 
-<a name="7">The more sub-functions you access, the less recursion depth you get in the calling function.</a>
+###### <a name="7">The more sub-functions you access, the less recursion depth you get in the calling function.</a>
 
 ```
 /**
@@ -213,7 +213,7 @@ iteration
 ```
 
 
-<a name="8">Be careful how sub-functions are referenced, or they will prevent tail recursion:</a>
+###### <a name="8">Be careful how sub-functions are referenced, or they will prevent tail recursion:</a>
 
 ```
 /**
@@ -234,4 +234,28 @@ If ( iteration >= 10000 ;
  */
 
 iteration
+```
+
+
+###### <a name="9">Sub function calling the parent can use tail recursion.</a>
+
+```
+/**
+ * test ( iteration )
+ *
+ * test ( 0 ) = "?"
+ * test ( 1 ) = 25000 
+ */
+
+If ( iteration >= 25000 ;
+    iteration ;
+    testSub ( iteration + 1 )
+)
+
+/**
+ * testSub ( iteration )
+ *
+ */
+
+test ( iteration )
 ```
