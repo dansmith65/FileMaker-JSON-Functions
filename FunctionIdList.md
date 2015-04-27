@@ -13,6 +13,8 @@ List of functionId's sent to the z_jsonParseSupport functions to identify the se
 - 210	ParseArrayFindEnd
 - 211	ParseArrayFindValue
 - 212	ParseArrayGetKeyList
+- 220	GetKeyListFromCache
+- 221	GetIndexListFromCache
 
 - 300	ParseWhitespace
 - 310	ParseString

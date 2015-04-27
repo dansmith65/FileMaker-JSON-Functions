@@ -14,6 +14,8 @@
  *			210		ParseArrayFindEnd
  *			211		ParseArrayFindValue
  *			212		ParseArrayGetKeyList
+ *			220		GetKeyListFromCache
+ *			221		GetIndexListFromCache
  *		req = requested data (if any)
  *		private = private data, likely sent to recursive calls of a function
  *		res = response
@@ -266,6 +268,69 @@ Case (
 					)
 				) ;
 				
+				functionId = 202 /* ParseObjectGetKeyList */
+					or functionId = 212 /* ParseArrayGetKeyList */
+				;
+				Let ( [
+					~lastEntry = RightValues ( $~json.cache[$~json.depth] ; 1 ) ;
+					~cacheIsComplete = Left ( ~lastEntry ; 6 ) = "|DONE|" ;
+					/**
+					 * get list of keys already cached
+					 */
+					$~json.temp.res = If ( functionId = 202 ;
+						z_jsonParseSupport2 ( 220 /* GetKeyListFromCache */ ; "" ; "" ; "" ; "" ) ;
+						z_jsonParseSupport2 ( 221 /* GetIndexListFromCache */ ; "" ; "" ; "" ; "" )
+					) ;
+					~nextStep = If ( ~cacheIsComplete ; 2 ; 1 )
+					
+					/* logging start disabled
+					; ~! = LogWriterMemoryCreateEntry (
+						"ParseStructure cache: read: data"
+							& " [functionId:" & functionId & "]"
+							& " [uuid:" & uuid & "]"
+							& " [req:" & req & "]"
+							& " [private:" & private & "]"
+							& " [res:" & res & "]"
+							& " [step:" & step & "]"
+							& " [~lastEntry:" & ~lastEntry & "]"
+							& " [~cacheIsComplete:" & ~cacheIsComplete & "]"
+							& " [~nextStep:" & ~nextStep & "]"
+							& " [$~json.temp.res:" & $~json.temp.res & "]"
+					) disabled logging end */
+				] ;
+					If ( ~cacheIsComplete ;
+						2 ; /* nextStep: clean-up */
+						
+						/* else: move pointer to last position and parse the rest of the object */
+						Let ( [
+							$~json.temp.index = If ( ~isObject ; ~index ;
+								/* load next index for an array */
+								Left (
+									~lastEntry ;
+									Position ( ~lastEntry ; "|" ; 1 ; 1 ) - 1
+								) + 1
+							) ;
+							~nextStep = 1 /* main */
+							
+							/* logging start disabled
+							; ~! = LogWriterMemoryCreateEntry (
+								"ParseStructure cache: read: cache not complete"
+									& " [functionId:" & functionId & "]"
+									& " [uuid:" & uuid & "]"
+									& " [req:" & req & "]"
+									& " [private:" & private & "]"
+									& " [res:" & res & "]"
+									& " [step:" & step & "]"
+									& " [~lastEntry:" & ~lastEntry & "]"
+									& " [$~json.temp.index:" & $~json.temp.index & "]"
+									& " [~nextStep:" & ~nextStep & "]"
+							) disabled logging end */
+						] ;
+							~nextStep
+						)
+					)
+				) ;
+				
 				/* else: caching not enabled for this function, yet */
 				
 				/* logging start disabled
@@ -341,7 +406,7 @@ Case (
 				functionId = 202  /* ParseObjectGetKeyList */
 					or functionId = 212  /* ParseArrayGetKeyList */
 				;
-				""
+				res
 			) ;
 			res
 		) ;
@@ -681,7 +746,188 @@ Case (
 			res
 		)
 	) ;
-	
+
+
+
+	functionId = 220 /* GetKeyListFromCache */
+		or functionId = 221 /* GetIndexListFromCache */
+	;
+	/**
+	 * =====================================================================
+	 * GetIndexListFromCache
+	 *
+	 * parameters:
+	 *		req = not used
+	 *		private = iteration counter
+	 *
+	 * GetKeyListFromCache returns:
+	 *		list of object names for data in $~json.cache[$~json.depth]
+	 *
+	 * GetIndexListFromCache returns:
+	 *		list of array indexes for data in $~json.cache[$~json.depth]
+	 * =====================================================================
+	 */
+	Let ( [
+		/**
+		 ******************************************************
+		 * local vars used by any/all sections
+		 ******************************************************
+		 */
+		/* ~i is a 1 based iterator used to extract one value at a time from cache */
+		~i = If ( IsEmpty ( private ) ; 1 ; GetAsNumber ( private ) + 1 ) ;
+		~cacheItem = GetValue ( $~json.cache[$~json.depth] ; ~i ) ;
+		~cacheIsComplete = Left ( ~cacheItem ; 6 ) = "|DONE|" ;
+		step = If (
+			IsEmpty ( ~cacheItem ) or ~cacheIsComplete ;
+			2 ; /* main */
+			1 /* clean-up*/
+		) ;
+		/* logging start disabled
+		~! = LogWriterMemoryCreateEntry (
+			"GetKeyOrIndexListFromCache setup on every call"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [~i:" & ~i & "]"
+				& " [~cacheItem:" & ~cacheItem & "]"
+				& " [~cacheIsComplete:" & ~cacheIsComplete & "]"
+				& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
+		) ; disabled logging end */
+		
+		/**
+		 ******************************************************
+		 * STEP 0: SET-UP
+		 ******************************************************
+		 */
+		
+		
+		/**
+		 ******************************************************
+		 * STEP 1: MAIN
+		 ******************************************************
+		 */
+		~key = If ( step = 1 ;
+			If ( functionId = 220 /* GetKeyListFromCache */ ;
+				/**
+				 * extract original key from json
+				 * (the key in cache has had returns and pipe removed)
+				 */
+				Let ( [
+					~keyStartPos = GetValue ( Substitute ( ~cacheItem ; "|" ; "¶" ) ; 2 ) ;
+					/* NOTE: am NOT offsetting by the array's start position because GetKeyList is only meant to be called on a top-level structure */
+					$~json.at = GetAsNumber ( ~keyStartPos ) + 1 ;
+					$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				] ;
+					z_jsonParseSupport3 ( 310 /* ParseString */ ; "" ; "" ; "" ; "" )
+				) ;
+				
+				/* else: GetIndexListFromCache */
+				Left (
+					~cacheItem ;
+					Position ( ~cacheItem ; "|" ; 1 ; 1 ) - 1
+				)
+			)
+		) ;
+		~! = If ( step = 1
+				and functionId = 221 /* GetIndexListFromCache */
+				and GetAsNumber ( ~key ) ≠ ~i - 1
+			;
+			z_jsonParseSupport1 ( 199 /* Error */ ;
+				"Invalid cache: key " & Quote ( ~key ) & " did not match index " & Quote ( ~i - 1 ) ; "" ; "" ; ""
+			)
+		) ;
+		res = If ( step = 1 and IsEmpty ( $~json.error ) ;
+			List ( res ; ~key ) ;
+			res
+		) ;
+		
+		/* logging start disabled
+		~! = If ( step = 1 ; LogWriterMemoryCreateEntry (
+			"GetKeyOrIndexListFromCache after main"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [~i:" & ~i & "]"
+				& " [~cacheItem:" & ~cacheItem & "]"
+				& " [~cacheIsComplete:" & ~cacheIsComplete & "]"
+				& " [~key:" & ~key & "]"
+		) ) ; disabled logging end */
+		
+		
+		/**
+		 ******************************************************
+		 * ELSE: CLEAN-UP
+		 ******************************************************
+		 */
+		step = If ( not IsEmpty ( $json.error ) ; 2 ; step ) ;
+		
+		res = If ( step = 2 ;
+			If ( not IsEmpty ( $json.error ) ;
+				"?" ;
+				res
+			) ;
+			res
+		) ;
+		
+		~! = If ( step = 2 ;
+			/* move pointer to last processed character */
+			Let ( [
+				~lastCacheData = GetValue ( $~json.cache[$~json.depth] ; ~i - 1 ) ;
+				~length = Length ( ~lastCacheData ) ;
+				~lastPipe = Position ( ~lastCacheData ; "|" ; ~length ; -1 ) ;
+				~lastAt = Right ( ~lastCacheData ; ~length - ~lastPipe ) ;
+				/* NOTE: am NOT offsetting by the array's start position because GetKeyList is only meant to be called on a top-level structure */
+				$~json.at = GetAsNumber ( ~lastAt ) + 1 ;
+				$~json.ch = Middle ( $~json.text ; $~json.at - 1 ; 1 )
+				/* logging start disabled
+				; ~! = If ( step = 2 ; LogWriterMemoryCreateEntry (
+					"GetKeyOrIndexListFromCache clean-up: move pointer"
+						& " [functionId:" & functionId & "]"
+						& " [uuid:" & uuid & "]"
+						& " [private:" & private & "]"
+						& " [res:" & res & "]"
+						& " [step:" & step & "]"
+						& " [~i:" & ~i & "]"
+						& " [~lastCacheData:" & ~lastCacheData & "]"
+						& " [~length:" & ~length & "]"
+						& " [~lastPipe:" & ~lastPipe & "]"
+						& " [~lastAt:" & ~lastAt & "]"
+						& " [$~json.cache[" & $~json.depth & "]:" & $~json.cache[$~json.depth] & "]"
+				) ) disabled logging end */
+			] ;
+				If ( IsEmpty ( ~lastAt ) ;
+					z_jsonParseSupport1 ( 199 /* Error */ ;
+						"Invalid 'lastAt' value in cache: " & Quote ( ~lastCacheData ) ; "" ; "" ; ""
+					)
+				)
+			)
+		) ;
+		
+		/* load data back into private */
+		private = ~i
+		
+		/* logging start disabled
+		; ~! = If ( step = 2 ; LogWriterMemoryCreateEntry (
+			"GetKeyOrIndexListFromCache after clean-up"
+				& " [functionId:" & functionId & "]"
+				& " [uuid:" & uuid & "]"
+				& " [private:" & private & "]"
+				& " [res:" & res & "]"
+				& " [step:" & step & "]"
+				& " [~i:" & ~i & "]"
+				& " [~cacheItem:" & ~cacheItem & "]"
+		) ) disabled logging end */
+		
+	] ;
+		If ( step = 1 ;
+			z_jsonParseSupport2 ( functionId ; req ; private ; res ; step ) ;
+			res
+		)
+	) ;
 	
 	
 	/**
