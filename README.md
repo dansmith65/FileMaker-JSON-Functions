@@ -11,7 +11,9 @@ My previous [FileMaker-JSON](https://github.com/dansmith65/FileMaker-JSON) proje
 
 ##HOW TO INSTALL
 
-Copy all functions from [FileMaker-JSON-Functions.fmp12](FMFiles/FileMaker-JSON-Functions.fmp12) and paste them into your own file.
+Copy all functions from [FileMaker-JSON-Functions.fmp12](FMFiles/FileMaker-JSON-Functions.fmp12), except LogWriterMemoryCreateEntry, then paste them into your own file.
+
+NOTE: `jsonA` and `jsonO` are included in that file, but not in this project because they are an exact copy of the functions with the same name from [geistinteractive/JSONCustomFunctions](https://github.com/geistinteractive/JSONCustomFunctions).
 
 ##HOW TO USE
 
