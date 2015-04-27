@@ -20,22 +20,6 @@
  *			z_jsonParseSupport1 - 3
  *			z_jsonEncodeSupport
  *
- * NOTES:
- *
- * TODO:
- *		Determine how to add an array value
- *			- should it allow positional insertion?
- *				- insert before other values
- *					- negative number?
- *					- "unshift" (like the json method) ?
- *				- insert between values
- *					- decimal: 2.5 would insert after 2?
- *				- insert at end
- *					- I assume this would be the most common use-case
- *					- empty keyOrIndex value?
- *			- if the index is higher than array size + 1, should it pad the array
- *			  with null values like javascript does?
- *
  * LICENSE:
  *		See the LICENSE.md file for license rights and limitations (MIT):
  *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
