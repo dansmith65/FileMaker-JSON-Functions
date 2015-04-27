@@ -781,10 +781,13 @@ Case (
 		 * logging should always be enabled
 		 */
 		message = req ;
+		
+		/* logging start disabled
 		~! = LogWriterMemoryCreateEntry (
 			"Error"
 				& " [message:" & message & "]"
-		) ;
+		) ; disabled logging end */
+		
 		/* save the error */
 		$json.error = List (
 			message
