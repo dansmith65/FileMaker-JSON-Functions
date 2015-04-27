@@ -19,3 +19,7 @@ I'd like to thank [geist interactive](https://www.geistinteractive.com/) for spo
 This project is currently in a very early stage of development, so you should account for the potential for major changes to be made to it. That being said; my goal is to match the functionality of the [BaseElements](http://www.goya.com.au/baseelements/plugin) backed set of custom functions with the same name available at [geistinteractive/JSONCustomFunctions](https://github.com/geistinteractive/JSONCustomFunctions).
 
 These functions are drastically slower than the BaseElements backed functions. My goal is to implement caching to improve the performance of these functions, but they will never be as fast as the BaseElements backed functions.
+
+## License
+
+See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).

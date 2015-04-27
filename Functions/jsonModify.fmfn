@@ -36,6 +36,10 @@
  *			- if the index is higher than array size + 1, should it pad the array
  *			  with null values like javascript does?
  *
+ * LICENSE:
+ *		See the LICENSE.md file for license rights and limitations (MIT):
+ *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
+ *
  * HISTORY:
  *		CREATED on 2015-MAR-31 by Daniel Smith dansmith65@gmail.com
  *

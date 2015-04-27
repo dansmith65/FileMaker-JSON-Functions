@@ -16,17 +16,13 @@
  *			212		ParseArrayGetKeyList
  *			220		GetKeyListFromCache
  *			221		GetIndexListFromCache
- *		req = requested data (if any)
- *		private = private data, likely sent to recursive calls of a function
- *		res = response
- *		step = current state of a recursive function
  *
- * DEPENDENCIES:
- *		none
+ * LICENSE:
+ *		See the LICENSE.md file for license rights and limitations (MIT):
+ *		https://raw.githubusercontent.com/dansmith65/FileMaker-JSON-Functions/master/LICENSE.md
  *
  * HISTORY:
  *		CREATED on 2015-APR-10 by Daniel Smith dansmith65@gmail.com
- *
  * =====================================
  */
 
