@@ -16,6 +16,7 @@
  *			130		jsonGet
  *			131		jsonModify
  *			132		jsonGetKeyList
+ *			133		jsonDelete
  *			140		initializeCache
  *			199		Error
  *		req = requested data (if any)
@@ -233,9 +234,7 @@ Case (
 		
 		~ch = Middle ( req ; ~at ; 1 ) ;
 		~at = ~at - 1 ;
-		~endFound =
-			~ch = "}"
-			or ~ch = "]"
+		~endFound = ~ch > " "
 	] ;
 		If ( ~endFound ;
 			~at + 1 ;
@@ -479,6 +478,7 @@ Case (
 	) ;
 	
 	
+	
 	functionId = 132 ; /* jsonGetKeyList */
 	Let ( [
 		json = req ;
@@ -532,6 +532,87 @@ Case (
 			) disabled logging end */
 		] ;
 			""
+		)
+	) ;
+	
+	
+	
+	functionId = 133 ; /* jsonDelete */
+	Let ( [
+		json = req ;
+		keyOrIndex = private ;
+		newValue = res ;
+		
+		~cache = z_jsonParseSupport1 ( 110 /* GetValuePosition */ ; json ; keyOrIndex ; "" ; "" )
+	] ;
+		Case (
+			not IsEmpty ( $json.error ) ;
+			"?" ;
+			
+			/**
+			 * value was found
+			 */
+			~cache ;
+			Let ( [
+				~cacheAsList = Substitute ( ~cache ; "|" ; ¶ ) ;
+				~keyStartPos = GetValue ( ~cacheAsList ; 2 ) ;
+				~valStartPos = GetValue ( ~cacheAsList ; 4 ) ;
+				~start = If ( not IsEmpty ( ~keyStartPos ) ; ~keyStartPos ; ~valStartPos ) ;
+				~valEndPos = GetValue ( ~cacheAsList ; 5 ) ;
+				~jsonBefore =  Middle (
+					json ;
+					1 ;
+					~start - 1
+				) ;
+				/* remove the trailing comma, if any, from ~jsonBefore */
+				~lastChPos = z_jsonParseSupport1 ( 120 /* GetEndPosition */ ; ~jsonBefore ; "" ; "" ; "" ) ;
+				~lastCh = Middle ( ~jsonBefore ; ~lastChPos ; 1 ) ;
+				~lastChPos = If ( ~lastCh = "," ; ~lastChPos - 1 ; ~lastChPos ) ;
+				~jsonBefore =  Middle (
+					json ;
+					1 ;
+					~lastChPos
+				) ;
+				
+				~jsonAfterStartPos = If ( ~lastCh = "," ;
+					~valEndPos ;
+					
+					/* else: remove leading comma from value after */
+					Let ( [
+						$~json.text = json ;
+						$~json.at = ~valEndPos + 1 ;
+						$~json.ch = Middle ( $~json.text ; $~json.at ; 1 ) ;
+						$~json.at = $~json.at + 1 ;
+						
+						~! = If ( $~json.ch ≤ " " ;
+							z_jsonParseSupport3 ( 300 /* ParseWhitespace */ ; "" ; "" ; "" ; "" )
+						) ;
+						
+						~start = If ( $~json.ch = "," ; $~json.at - 1, ~valEndPos ) ;
+						
+						$~json.text = "" ;
+						$~json.at = "" ;
+						$~json.ch = ""
+					] ;
+						~start
+					)
+				) ;
+				
+				~jsonAfter = Middle (
+					json ;
+					~jsonAfterStartPos + 1 ;
+					Length ( json ) - ~jsonAfterStartPos + 1
+				)
+			] ;
+				~jsonBefore
+					& ~jsonAfter
+			) ;
+			
+			
+			/**
+			 * else: value was NOT found
+			 */
+			json
 		)
 	) ;
 	
