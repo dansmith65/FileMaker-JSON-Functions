@@ -22,6 +22,8 @@
  * LINK: https://github.com/dansmith65/FileMaker-JSON-Functions
  *
  * HISTORY:
+ *		MODIFIED on 2015-OCT-05 by Daniel Smith dansmith65@gmail.com
+ *			- convert to number before encoding as number; fixes bug #34
  *		v1.0.0 RELEASED on 2015-APR-27 by Daniel Smith dansmith65@gmail.com
  * =====================================
  */
@@ -160,14 +162,18 @@ Case (
 	 * =====================================
 	 */
 
-	Case (
-		Left ( req ; 2 ) = "-." ;
-		Substitute ( req ; "-." ; "-0." ) ;
+	Let ( [
+		~num = GetAsNumber ( req )
+	] ;
+		Case (
+			Left ( ~num ; 2 ) = "-." ;
+			Substitute ( ~num ; "-." ; "-0." ) ;
 
-		Left ( req ; 1 ) = "." ;
-		"0" & req ;
+			Left ( ~num ; 1 ) = "." ;
+			"0" & ~num ;
 
-		req
+			~num
+		)
 	) ;
 	
 	
